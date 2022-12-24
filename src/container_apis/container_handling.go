@@ -103,8 +103,8 @@ func ContainerStop(ctx context.Context,cli *Client,containerName string){
 
 
 //Start the container if already created
-func ContainerStart(ctx context.Context,cli *Client){
-
+func ContainerStart(ctx context.Context,cli *Client,containerName string){
+	//** Check if containerName is valid or ContainerStart requires id to start the container
 	//Handle db call to retrieve the 'id' for the container required to start the container
 
     if err := cli.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
