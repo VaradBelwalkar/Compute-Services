@@ -11,27 +11,29 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/gocql/gocql"
+    "go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // The main function manages all the query handling and manages the database as well
 
+const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
 func main() {
+	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(url)) // Give appropriate port here
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+	err = mongo_client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer mongo_client.Disconnect(ctx)
 
- //Initiating Cassandra 
-// connect to the cluster
-cluster := gocql.NewCluster("PublicIP", "PublicIP", "PublicIP") //replace PublicIP with the IP addresses used by your cluster.
-cluster.Consistency = gocql.Quorum
-cluster.ProtoVersion = 4
-cluster.ConnectTimeout = time.Second * 10
-cluster.Authenticator = gocql.PasswordAuthenticator{Username: "Username", Password: "Password"} //replace the username and password fields with their real settings.
-session, err := cluster.CreateSession()
-    if err != nil {
-    log.Println(err)
-    return
-}
-defer session.Close() 
+
 
 // Initiate Docker client
 
@@ -44,24 +46,28 @@ if err != nil {
 defer cli.Close()
 
 
-InitiateCassandra(session);
+InitiateMongoDB(mongo_client);
+
+// Get userinfo-collection handler 
+collection := mongo_client.Database("private-cloud").Collection("userinfo")
+
+
 
   // create a mux to hold url and handlers
   mux := http.NewServeMux()
   log.Println("created mux")
 
   // register handlers using HandleFunc
-  mux.HandleFunc("/container/run/*", Container_Run)
-  mux.HandleFunc("/container/resume/*", Container_Resume)
-  mux.HandleFunc("/container/<regex>/*", Container_Stop_or_Remove)
-  mux.HandleFunc("/container/list/*", Container_List)
+  mux.HandleFunc("/container/run/*", Container_Run(ResponseWriter,*Request,collection))
+  mux.HandleFunc("/container/resume/*", Container_Resume(ResponseWriter,*Request,collection))
+  mux.HandleFunc("/container/<regex>/*", Container_Stop_or_Remove(ResponseWriter,*Request,collection))
+  mux.HandleFunc("/container/list/*", Container_List(ResponseWriter,*Request,collection))
   //Handle POST Request
-  mux.HandleFunc("/upload_file/", upload_file)
-  mux.HandleFunc("/upload_folder/", upload_folder)
+  mux.HandleFunc("/upload_file/", upload_file(ResponseWriter,*Request,collection))
+  mux.HandleFunc("/upload_folder/", upload_folder(ResponseWriter,*Request,collection))
   //Here we have registered the handlers
 
   // register mux with server and listen for requests
   log.Println("starting server")
   log.Fatal(http.ListenAndServe(":8080", mux))
 }
-

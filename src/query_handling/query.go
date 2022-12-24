@@ -20,39 +20,35 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
 
   }
   
-  func Container_Resume(w http.ResponseWriter, _ *http.Request) {
+  func Container_Resume(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
 	ContainerStart(ctx,Cli)
   }
   
-  func Container_List(w http.ResponseWriter, _ *http.Request) {
+  func Container_List(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
 	 
   
   }
 
-  func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request) {
+  func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
 	 
   
   }
 
-  func Container_List(w http.ResponseWriter, _ *http.Request) {
+  func Container_List(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
   
   }
 
-  func upload_file(w http.ResponseWriter, _ *http.Request) {
+  func upload_file(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
-	
-
 
   }
 
-  func upload_folder(w http.ResponseWriter, _ *http.Request) {
+  func upload_folder(w http.ResponseWriter, _ *http.Request,collection *Collection) {
 	ctx := context.Background()
-	
-
 
   }
 

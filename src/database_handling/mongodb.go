@@ -1,0 +1,33 @@
+package database_handling
+
+import (
+	"context"
+	"io"
+	"os"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
+    "go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"    
+)
+
+
+func InitiateMongoDB(m session) {
+//Create an empty Database first within MongoDB
+// Create appropriate collection which will contain information about user
+// The preferred keys in document ----> username, containerObj {containerName, port}
+
+ 
+}
+
+
+// To be called when authorized user requests storage of data
+func StoreData(){
+
+
+}
+
+

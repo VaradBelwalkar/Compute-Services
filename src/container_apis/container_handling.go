@@ -152,3 +152,23 @@ func ImageInfo(ctx context.Context,cli *Client){
 
 }
 
+
+
+func getVM(){
+
+//Make the db call to ensure one user only gets only one time access to the VM
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
