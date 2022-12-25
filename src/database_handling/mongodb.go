@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"    
 )
-
+//Currently working on just retrieving data
 
 func InitiateMongoDB(m session) {
 //Create an empty Database first within MongoDB

@@ -73,7 +73,9 @@ func loginHandler(response http.ResponseWriter, request *http.Request) {
 	pass := request.FormValue("password")
 	redirectTarget := "/"
 	if name != "" && pass != "" {
-		// .. check credentials ..
+		// .. check credentials against db entry
+        
+        //setting coockie based session
 		setSession(name, response)
 		redirectTarget = "/internal"
 	}
@@ -124,11 +126,14 @@ func internalPageHandler(response http.ResponseWriter, request *http.Request) {
 	}
 }
 
-// server main method
 
-var router = mux.NewRouter()
 
 func main() {
+
+    // server main method
+
+    var router = mux.NewRouter()
+
     //Initiate Mongo client
 	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(url)) // Give appropriate port here
 	if err != nil {
@@ -143,20 +148,20 @@ func main() {
 
 
 
-// Initiate Docker client
-Cli_native, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-if err != nil {
-    panic(err)
-}
-defer cli.Close()
+    // Initiate Docker client
+    Cli_native, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    if err != nil {
+       panic(err)
+    }
+    defer cli.Close()
 
 
-InitiateMongoDB(mongo_client);
+    InitiateMongoDB(mongo_client);
 
-// Get userinfo-collection handler 
-CollectionHandler = mongo_client.Database("private-cloud").Collection("userinfo")
-
-
+    // Get userinfo-collection handler 
+    CollectionHandler = mongo_client.Database("private-cloud").Collection("userinfo")
+    
+    //login to be handled separatly
 
 	router.HandleFunc("/", indexPageHandler)
 	router.HandleFunc("/internal", internalPageHandler)

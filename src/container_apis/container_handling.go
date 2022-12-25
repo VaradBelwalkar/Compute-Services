@@ -54,17 +54,81 @@ func getTar(publicKey string) bytes.Buffer{
 	return buf;
 }
 
+//Function returning document object, creating if not exists (used by containerCreate)
+//username to query
+func get_document_if_not_exists(ctx context.Context,username string) (map[string]interface{}, err){
+	var documentData map[string]interface{} 
+	//Check user-document exists in the collection 
+	//document_handler of type *SingleResult, see github code for more details
+	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
+	//If not then use following	
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			//Insert Document for the user
+			CollectionHandler.InsertOne(ctx,bson.M{"username":userName,"totalOwnedContainers":0,"ownedContainers":{}})
+			if err!=nil{return err}
+		} else {
+			log.Fatal(err)
+		}
+	}	
+	//Here the document is there in collection so working with it
+	
+	//Retrieving user-info
+	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
+		if err!=nil{
+			return nil,err
+		}
+
+return documentData,nil
+}
+
+
+//Function to return err if document not found
+func get_document(ctx,context.Context,username string)(map[string]interface{}, err){
+
+	var documentData map[string]interface{} 
+	//Check user-document exists in the collection 
+	//document_handler of type *SingleResult, see github code for more details
+	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
+	//If not then use following	
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil,err
+		} else {
+			return nil,err
+		}
+	}	
+
+return documentData,nil
+
+}
+
+
 //Create a new container
 func ContainerCreate(ctx context.Context,cli *Client,imageName string){
 
-    resp, err := cli.ContainerCreate(ctx, &container.Config{
+	var documentData map[string]interface{} 
+	documentData, err = get_document_if_not_exists()
+	if err!= nil{
+		return err
+	}
+	//Here we get the document to work with
+
+	
+	totalOwnedContainers := documentData["totalOwnedContainers"].(int)
+	
+		if totalOwnedContainers>5 {
+			//Handle response
+		}
+	
+	//Else do allocate the container	
+
+    resp, err := cli.ContainerCreate(ctx, &container.Config{ 
         Image: imageName,
-        Cmd:   []string{"echo", "hello world"},
     }, nil, nil, nil, "")
     if err != nil {
         panic(err)
     }
-
 
 	privateKey,publicKey,err:= MakeSSHKeyPair()
 	if err!=nil {
@@ -77,10 +141,10 @@ func ContainerCreate(ctx context.Context,cli *Client,imageName string){
 	if err!=nil{
 		panic(err)
 	}
+		// Handle db call to store the resp.ID into the appropriate row for the user
+	
 
-
-	// Handle db call to store the resp.ID into the appropriate row for the user
-
+	CollectionHandler.UpdateOne(ctx,bson.M{"username":userName},bson.M{ownedContainers})
 
 }
 
@@ -106,6 +170,15 @@ func ContainerStop(ctx context.Context,cli *Client,containerName string){
 func ContainerStart(ctx context.Context,cli *Client,containerName string){
 	//** Check if containerName is valid or ContainerStart requires id to start the container
 	//Handle db call to retrieve the 'id' for the container required to start the container
+	var documentData map[string]interface{} 
+	//Make db call to retrieve user info about the containers it holds
+	documentData,err = get_document(ctx,username)
+	if err == mongo.ErrNoDocuments{
+		//Give appropriate response
+
+	}else{
+		return err //Here the system failure has occured
+	}
 
     if err := cli.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
         panic(err)
@@ -136,9 +209,15 @@ func ContainerStart(ctx context.Context,cli *Client,containerName string){
 
 //Gives information about the containers that user holds
 func OwnedContainerInfo(ctx context.Context,cli *Client){
-
+	var documentData map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
+	documentData,err = get_document(ctx,username)
+	if err == mongo.ErrNoDocuments{
+		//Give appropriate response
 
+	}else{
+		return err //here system failure has happened
+	}
 
 }
 
