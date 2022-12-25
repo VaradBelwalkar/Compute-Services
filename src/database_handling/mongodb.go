@@ -25,9 +25,26 @@ func InitiateMongoDB(m session) {
 
 
 // To be called when authorized user requests storage of data
-func StoreData(){
+//Depends on the structure of the documents
+func upload_file(){
+//Handle POST request to get the bytes for the file 
+
+}
+
+func upload_folder(){
+//Handle POST request to get teh bytes for the file
 
 
 }
+
+
+
+
+
+
+
+
+
+
 
 

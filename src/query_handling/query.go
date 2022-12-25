@@ -24,7 +24,7 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
 
   }
   
-  func Container_Resume(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func Container_Resume(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 	//Extracting required string from the request Structure
     URLPath := _.URL.Path // Suppose "/foo/bar/something"
@@ -32,13 +32,13 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
 	ContainerStart(ctx,Cli,containerName)
   }
   
-  func Container_List(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func Container_List(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 	 
   
   }
 
-  func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 	//Extracting required string from the request Structure
     URLPath := _.URL.Path // Suppose "/foo/bar/something"
@@ -46,17 +46,17 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
   
   }
 
-  func Container_List(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func Container_List(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
   
   }
 
-  func upload_file(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func upload_file(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 
   }
 
-  func upload_folder(w http.ResponseWriter, _ *http.Request,collection *Collection) {
+  func upload_folder(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 
   }
