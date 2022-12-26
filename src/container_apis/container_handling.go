@@ -54,34 +54,6 @@ func getTar(publicKey string) bytes.Buffer{
 	return buf;
 }
 
-//Function returning document object, creating if not exists (used by containerCreate)
-//username to query
-func get_document_if_not_exists(ctx context.Context,username string) (map[string]interface{}, err){
-	var documentData map[string]interface{} 
-	//Check user-document exists in the collection 
-	//document_handler of type *SingleResult, see github code for more details
-	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
-	//If not then use following	
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			//Insert Document for the user
-			CollectionHandler.InsertOne(ctx,bson.M{"username":userName,"totalOwnedContainers":0,"ownedContainers":{}})
-			if err!=nil{return err}
-		} else {
-			log.Fatal(err)
-		}
-	}	
-	//Here the document is there in collection so working with it
-	
-	//Retrieving user-info
-	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
-		if err!=nil{
-			return nil,err
-		}
-
-return documentData,nil
-}
-
 
 //Function to return err if document not found
 func get_document(ctx,context.Context,username string)(map[string]interface{}, err){
@@ -108,7 +80,7 @@ return documentData,nil
 func ContainerCreate(ctx context.Context,cli *Client,imageName string){
 
 	var documentData map[string]interface{} 
-	documentData, err = get_document_if_not_exists()
+	documentData, err = get_document()
 	if err!= nil{
 		return err
 	}
@@ -153,12 +125,40 @@ func ContainerCreate(ctx context.Context,cli *Client,imageName string){
 
 //Stop the container 
 func ContainerStop(ctx context.Context,cli *Client,containerName string){
+	//** Check if containerName is valid or ContainerStart requires id to start the container
+	//Handle db call to retrieve the 'id' for the container required to start the container
+	var documentData map[string]interface{} 
+	//Make db call to retrieve user info about the containers it holds
+	documentData,err = get_document(ctx,username)
+	if err == mongo.ErrNoDocuments{
+		//Give appropriate response
+		fmt.Fprintf(w, "You haven't registered yet!\nRegister first")
+	}else{
+		return err //Here the system failure has occured
+	}
 
-	//Make appropriate db call to see whether user holds the "containerName" container
+    if err := cli.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
+        panic(err)
+    }
 
-	//id should be retrieved from the database
-	//Timeout not specified
-	if err:=cli.ContainerStop(ctx,id);err!=nil{
+    statusCh, errCh := cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
+    select {
+    case err := <-errCh:
+        if err != nil {
+            panic(err)
+        }
+    case <-statusCh:
+    }
+
+	privateKey,publicKey,err:= MakeSSHKeyPair()
+	if err!=nil {
+		panic(err)
+	}
+
+	//First make a tar archive for the public key generated above 
+
+	err:=cli.CopyToContainer(context.Background(), id, "/home/user/", getTar(publicKey),types.CopyToContainerOptions{})
+	if err!=nil{
 		panic(err)
 	}
 
