@@ -4,8 +4,8 @@ import (
 
 	"fmt"
 	"net/http"
-	"src/container_apis"
-	"main"
+	"github.com/VaradBelwalkar/Private-Cloud/src/container_apis"
+	"github.com/VaradBelwalkar/Private-Cloud"
 	"path/filepath"
 
 )
@@ -34,7 +34,7 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
   
   func Container_List(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
-	 
+	OwnedContainerInfo(ctx,)
   
   }
 
@@ -54,6 +54,7 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
   func upload_file(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 
+
   }
 
   func upload_folder(w http.ResponseWriter, _ *http.Request) {
@@ -61,3 +62,14 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
 
   }
 
+func register_user(){
+
+
+}
+
+
+func remove_user(){
+
+
+
+}
