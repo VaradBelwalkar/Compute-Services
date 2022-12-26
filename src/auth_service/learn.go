@@ -7,7 +7,7 @@ import (
 
 
 
-// ********************Here understand how sessions work in Golang ********************
+// ******************** Here understand how sessions work in Golang ********************
 
 
 

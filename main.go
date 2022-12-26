@@ -16,12 +16,13 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 )
 //Global Object 
 var CollectionHandler *Collection 
+var Sys_CollectionHandler *Collection 
 
 // The main function manages all the query handling and manages the database as well
 const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
@@ -35,7 +36,7 @@ func main() {
     var router = mux.NewRouter()
 
     //Initiate Mongo client
-	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(url)) // Give appropriate port here
+	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(url)) 
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,11 +56,8 @@ func main() {
     }
     defer Cli.Close()
 
-
-    InitiateMongoDB(mongo_client);
-
-    // Get userinfo-collection handler 
-    CollectionHandler = mongo_client.Database("private-cloud").Collection("userinfo")
+	//Get handler for the "user_details" collection (creates collection if not exists)
+    CollectionHandler,Sys_CollectionHandler:=InitiateMongoDB(mongo_client);
     
     //login to be handled separatly
 

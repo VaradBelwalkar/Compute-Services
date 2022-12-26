@@ -223,7 +223,7 @@ func OwnedContainerInfo(ctx context.Context,cli *Client){
 
 
 
-//Gives images available on the server
+//Gives images available on the server (the information is available on "system_details" collection)
 func ImageInfo(ctx context.Context,cli *Client){
 	
 	//Make db call to retrieve the available ssh-able images 
