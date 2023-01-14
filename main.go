@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"net/http"
-    "github.com/VaradBelwalkar/Private-Cloud/src/database_handling"
-    "github.com/VaradBelwalkar/Private-Cloud/src/query_handling"
+    "github.com/VaradBelwalkar/Private-Cloud/api/database_handling"
+    "github.com/VaradBelwalkar/Private-Cloud/api/query_handling"
     "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -24,11 +24,11 @@ import (
 var CollectionHandler *Collection 
 var Sys_CollectionHandler *Collection 
 
-// The main function manages all the query handling and manages the database as well
 const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
 
 
+// The main function manages all the query handling and manages the database as well
 func main() {
 
     // server main method

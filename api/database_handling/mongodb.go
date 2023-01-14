@@ -70,6 +70,10 @@ func InitiateMongoDB(m *Client) (*Collection) {
 			log.Fatal(err)
 		}
 	}
+	
+	//Handle adding system details here by creating new document int the system_details
+	
+
 
 	return coll,sys_coll
 }

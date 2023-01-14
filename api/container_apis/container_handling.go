@@ -56,7 +56,7 @@ func getTar(publicKey string) bytes.Buffer{
 
 
 //Function to return err if document not found
-func get_document(ctx,context.Context,username string)(map[string]interface{}, err){
+func get_document(ctx context.Context,username string)(map[string]interface{}, err){
 
 	var documentData map[string]interface{} 
 	//Check user-document exists in the collection 
@@ -119,7 +119,6 @@ func ContainerCreate(ctx context.Context,cli *Client,imageName string){
 	CollectionHandler.UpdateOne(ctx,bson.M{"username":userName},bson.M{ownedContainers})
 
 }
-
 
 
 

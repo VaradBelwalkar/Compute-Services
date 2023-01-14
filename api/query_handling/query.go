@@ -4,65 +4,63 @@ import (
 
 	"fmt"
 	"net/http"
-	"github.com/VaradBelwalkar/Private-Cloud/src/container_apis"
-	"github.com/VaradBelwalkar/Private-Cloud"
+	"github.com/VaradBelwalkar/Private-Cloud/api/container_apis"
 	"path/filepath"
 
 )
 // Here the user will be authenticated first and then request will be fulfilled
 
 
-// HandlerFunc to be registered
-func Container_Run(w http.ResponseWriter, _ *http.Request) {
-	ctx := context.Background()
+  // HandlerFunc to be registered
+func Container_Run(w http.ResponseWriter, req *http.Request) {
+ 	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := _.URL.Path // Suppose "/foo/bar/something"
+    URLPath := req.URL.Path // Suppose "/foo/bar/something"
 	imageName:=filepath.Base(URLPath) // will output "something"
 	//Get the requested Image from from the request-URL and pass it to the Container handler
 	ContainerCreate(ctx,Cli,imageName)
 
 
-  }
+}
   
-  func Container_Resume(w http.ResponseWriter, _ *http.Request) {
+func Container_Resume(w http.ResponseWriter, req *http.Request) {
 	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := _.URL.Path // Suppose "/foo/bar/something"
+    URLPath := req.URL.Path // Suppose "/foo/bar/something"
 	containerName:=filepath.Base(URLPath) // will output "something"	
 	ContainerStart(ctx,Cli,containerName)
-  }
+}
   
-  func Container_List(w http.ResponseWriter, _ *http.Request) {
+func Container_List(w http.ResponseWriter, req *http.Request) {
 	ctx := context.Background()
-	OwnedContainerInfo(ctx,)
-  
-  }
 
-  func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request) {
+	//Retrieve username appropriatly
+
+	OwnedContainerInfo(ctx,username)
+  
+}
+
+func Container_Stop_or_Remove(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 	//Extracting required string from the request Structure
     URLPath := _.URL.Path // Suppose "/foo/bar/something"
 	imageName:=filepath.Base(URLPath) // will output "something" 
   
-  }
+}
 
-  func Container_List(w http.ResponseWriter, _ *http.Request) {
-	ctx := context.Background()
-  
-  }
 
-  func upload_file(w http.ResponseWriter, _ *http.Request) {
+func upload_file(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 
 
-  }
+}
 
-  func upload_folder(w http.ResponseWriter, _ *http.Request) {
+func upload_folder(w http.ResponseWriter, _ *http.Request) {
 	ctx := context.Background()
 
-  }
+}
 
-  func registerUser(w http.ResponseWriter, r *http.Request) {
+func registerUser(w http.ResponseWriter, r *http.Request) {
 	// Parse the POST request body and retrieve the form values
 	err := r.ParseForm()
 	if err != nil {
@@ -83,7 +81,7 @@ func Container_Run(w http.ResponseWriter, _ *http.Request) {
 	err = CollectionHandler.FindOne(ctx, bson.M{"username": username}).Decode(&result)
 	if err == nil {
 		http.Error(w, "Username already exists!", http.StatusBadRequest)
-	} else{
+	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
 
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -133,11 +131,18 @@ func remove_account(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Remove the user document from the user_details
+
+		_,err = CollectionHandler.DeleteOne(ctx,bson.M{"username": username})
+		if err!=nil{
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)	
+
+
 	} else{
 
 		http.Error(w, "Username doesn't exist!", http.StatusBadRequest)
-
-	// Return a success response
-	w.WriteHeader(http.StatusOK)
 }
 }

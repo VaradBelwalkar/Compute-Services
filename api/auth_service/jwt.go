@@ -35,6 +35,7 @@ func init() {
 }
 
 // Sign a JWT using the HS256 algorithm
+// Generate the claims and pass them over here (claims like username(must) etc)
 func signJWT(claims jwt.MapClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(secretKey)
@@ -57,6 +58,7 @@ func verifyJWT(tokenString string) (jwt.MapClaims, error) {
 	}
 	return nil, fmt.Errorf("Invalid JWT")
 }
+
 
 // A handler function that signs a JWT and sends it to the client
 func signHandler(w http.ResponseWriter, r *http.Request) {
