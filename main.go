@@ -12,7 +12,7 @@ import (
     "github.com/VaradBelwalkar/Private-Cloud/api/query_handling"
     "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	
 	"github.com/docker/docker/pkg/stdcopy"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -20,9 +20,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 )
-//Global Object 
-var CollectionHandler *Collection 
-var Sys_CollectionHandler *Collection 
+
 
 const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
@@ -57,7 +55,7 @@ func main() {
     defer Cli.Close()
 
 	//Get handler for the "user_details" collection (creates collection if not exists)
-    CollectionHandler,Sys_CollectionHandler:=InitiateMongoDB(mongo_client);
+    database_handling.CollectionHandler,database_handling.Sys_CollectionHandler=InitiateMongoDB(mongo_client);
     
     //login to be handled separatly
 

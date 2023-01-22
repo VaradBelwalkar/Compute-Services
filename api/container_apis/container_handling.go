@@ -1,14 +1,20 @@
-package cotainer_apis
+package container_apis
 
 import (
 	"context"
-	"io"
-	"os"
+	"strings"
+	"time"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/gocql/gocql"
+	"crypto/rsa"
+	"crypto/rand"
+	"crypto/x509"
+	"golang.org/x/crypto/ssh"
+	"encoding/pem"
+	"github.com/VaradBelwalkar/Private-Cloud/api/database_handling"
 )
 //Creating private-public key pairs to be used by the client to ssh into registered container
 func MakeSSHKeyPair() (string, string, error) {
@@ -37,31 +43,14 @@ func MakeSSHKeyPair() (string, string, error) {
     return pubKeyBuf.String(), privKeyBuf.String(), nil
 }
 
-func getTar(publicKey string) bytes.Buffer{
-
-	var buf bytes.Buffer
-	tw := tar.NewWriter(&buf)
-	err = tw.WriteHeader(&tar.Header{
-		Name: "authorized_keys",            // filename
-		Mode: 600,                // permissions
-		Size: int64(len(publicKey)), // filesize
-	})
-	if err != nil {
-		return nil, fmt.Errorf("docker copy: %v", err)
-	}
-	tw.Write([]byte(publicKey))
-	tw.Close()
-	return buf;
-}
-
 
 //Function to return err if document not found
-func get_document(ctx context.Context,username string)(map[string]interface{}, err){
+func get_document(ctx context.Context,username string)(map[string]interface{}, error){
 
 	var documentData map[string]interface{} 
 	//Check user-document exists in the collection 
 	//document_handler of type *SingleResult, see github code for more details
-	err := CollectionHandler.Findone(ctx,bson.M{"username":userName}).Deocde(&documentData)
+	err := database_handling.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
 	//If not then use following	
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -77,12 +66,13 @@ return documentData,nil
 
 
 //Create a new container
-func ContainerCreate(ctx context.Context,cli *Client,imageName string){
+func ContainerCreate(ctx context.Context,cli *client.Client,imageName string) (string,error){
 
 	var documentData map[string]interface{} 
-	documentData, err = get_document()
+	var err error
+	documentData, err = get_document(context.TODO(),"CHANGE_USER_NAME_HERE")
 	if err!= nil{
-		return err
+		return "",err
 	}
 	//Here we get the document to work with
 
@@ -99,48 +89,53 @@ func ContainerCreate(ctx context.Context,cli *Client,imageName string){
         Image: imageName,
     }, nil, nil, nil, "")
     if err != nil {
-        panic(err)
+        return "",err
     }
 
 	privateKey,publicKey,err:= MakeSSHKeyPair()
 	if err!=nil {
-		panic(err)
+		return "",err
 	}
 
 	//First make a tar archive for the public key generated above 
-
-	err:=cli.CopyToContainer(context.Background(), resp.ID, "/home/user/", getTar(publicKey),types.CopyToContainerOptions{})
+	buf := strings.NewReader(publicKey)
+	if err == nil{
+	err =cli.CopyToContainer(context.Background(), resp.ID, "/home/user/",buf ,types.CopyToContainerOptions{})
 	if err!=nil{
-		panic(err)
-	}
-		// Handle db call to store the resp.ID into the appropriate row for the user
+		return "",err
+	}}
+	// Handle db call to store the resp.ID into the appropriate row for the user
 	
 
-	CollectionHandler.UpdateOne(ctx,bson.M{"username":userName},bson.M{ownedContainers})
+	database_handling.CollectionHandler.UpdateOne(ctx,bson.M{"username":"CHANGE_USER_NAME_HERE"},bson.M{"CHANGE":"ownedContainers"})
 
+return privateKey,nil
 }
 
 
 
 //Stop the container 
-func ContainerStop(ctx context.Context,cli *Client,containerName string){
+func ContainerStop(ctx context.Context,cli *client.Client,containerName string) error{
 	//** Check if containerName is valid or ContainerStart requires id to start the container
 	//Handle db call to retrieve the 'id' for the container required to start the container
-	var documentData map[string]interface{} 
+	//var documentData map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
-	documentData,err = get_document(ctx,username)
+	//var err error
+	_,err := get_document(ctx,"CHANGE_USER_NAME_HERE")
+
+	if err !=nil{
 	if err == mongo.ErrNoDocuments{
 		//Give appropriate response
-		fmt.Fprintf(w, "You haven't registered yet!\nRegister first")
+		panic("You haven't registered yet!\nRegister first")
 	}else{
 		return err //Here the system failure has occured
-	}
-
-    if err := cli.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
+	}}
+	var CHANGE time.Duration = 1029
+    if err := cli.ContainerStop(ctx, "id",&CHANGE); err != nil {
         panic(err)
     }
 
-    statusCh, errCh := cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
+    statusCh, errCh := cli.ContainerWait(ctx, "id", container.WaitConditionNotRunning)
     select {
     case err := <-errCh:
         if err != nil {
@@ -149,41 +144,71 @@ func ContainerStop(ctx context.Context,cli *Client,containerName string){
     case <-statusCh:
     }
 
-	privateKey,publicKey,err:= MakeSSHKeyPair()
-	if err!=nil {
-		panic(err)
-	}
-
-	//First make a tar archive for the public key generated above 
-
-	err:=cli.CopyToContainer(context.Background(), id, "/home/user/", getTar(publicKey),types.CopyToContainerOptions{})
-	if err!=nil{
-		panic(err)
-	}
+	return nil
 
 }
+
+
+//Stop the container 
+func ContainerRemove(ctx context.Context,cli *client.Client,containerName string) error{
+	//** Check if containerName is valid or ContainerStart requires id to start the container
+	//Handle db call to retrieve the 'id' for the container required to start the container
+	//var documentData map[string]interface{} 
+	//Make db call to retrieve user info about the containers it holds
+	//var err error
+	_,err := get_document(ctx,"CHANGE_USER_NAME_HERE")
+
+	if err !=nil{
+	if err == mongo.ErrNoDocuments{
+		//Give appropriate response
+		panic("You haven't registered yet!\nRegister first")
+	}else{
+		return err //Here the system failure has occured
+	}}
+	var options types.ContainerRemoveOptions
+    if err := cli.ContainerRemove(ctx, "id",options); err != nil {
+        panic(err)
+    }
+
+    statusCh, errCh := cli.ContainerWait(ctx, "id", container.WaitConditionNotRunning)
+    select {
+    case err := <-errCh:
+        if err != nil {
+            panic(err)
+        }
+    case <-statusCh:
+    }
+
+	return nil
+
+}
+
+
+
+
 
 
 
 //Start the container if already created
-func ContainerStart(ctx context.Context,cli *Client,containerName string){
+func ContainerStart(ctx context.Context,cli *client.Client,containerName string) (string,error){
 	//** Check if containerName is valid or ContainerStart requires id to start the container
 	//Handle db call to retrieve the 'id' for the container required to start the container
-	var documentData map[string]interface{} 
+	var _ map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
-	documentData,err = get_document(ctx,username)
+	var err error
+	_,err = get_document(ctx,"GET THE USER NAME SOMEHOW")
 	if err == mongo.ErrNoDocuments{
 		//Give appropriate response
 
 	}else{
-		return err //Here the system failure has occured
+		return "",err //Here the system failure has occured
 	}
 
-    if err := cli.ContainerStart(ctx, id, types.ContainerStartOptions{}); err != nil {
+    if err := cli.ContainerStart(ctx, "id", types.ContainerStartOptions{}); err != nil {
         panic(err)
     }
 
-    statusCh, errCh := cli.ContainerWait(ctx, id, container.WaitConditionNotRunning)
+    statusCh, errCh := cli.ContainerWait(ctx, "id", container.WaitConditionNotRunning)
     select {
     case err := <-errCh:
         if err != nil {
@@ -198,24 +223,28 @@ func ContainerStart(ctx context.Context,cli *Client,containerName string){
 	}
 
 	//First make a tar archive for the public key generated above 
-
-	err:=cli.CopyToContainer(context.Background(), id, "/home/user/", getTar(publicKey),types.CopyToContainerOptions{})
+	buf := strings.NewReader(publicKey)
+	err =cli.CopyToContainer(context.Background(), "id", "/home/user/", buf,types.CopyToContainerOptions{})
 	if err!=nil{
 		panic(err)
 	}
 
+	return privateKey,nil
+
 }
 
 //Gives information about the containers that user holds
-func OwnedContainerInfo(ctx context.Context,cli *Client){
-	var documentData map[string]interface{} 
+func OwnedContainerInfo(ctx context.Context,cli *client.Client)(string,error){
+	var _ map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
-	documentData,err = get_document(ctx,username)
+	var err error
+	_,err = get_document(ctx,"username")
 	if err == mongo.ErrNoDocuments{
 		//Give appropriate response
+		return "",err
 
 	}else{
-		return err //here system failure has happened
+		return "",err //here system failure has happened
 	}
 
 }
@@ -223,7 +252,7 @@ func OwnedContainerInfo(ctx context.Context,cli *Client){
 
 
 //Gives images available on the server (the information is available on "system_details" collection)
-func ImageInfo(ctx context.Context,cli *Client){
+func ImageInfo(ctx context.Context,cli *client.Client){
 	
 	//Make db call to retrieve the available ssh-able images 
 

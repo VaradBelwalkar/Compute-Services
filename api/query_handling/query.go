@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"github.com/VaradBelwalkar/Private-Cloud/api/container_apis"
 	"path/filepath"
-
+	"github.com/docker/docker/client"
 )
 // Here the user will be authenticated first and then request will be fulfilled
 

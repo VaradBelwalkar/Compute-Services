@@ -3,34 +3,34 @@ package database_handling
 import (
 	"context"
 	"io"
-	"os"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
+	"fmt"
+	"log"
+	"net/http"
+	"io/ioutil"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"    
 )
 //Currently working on just retrieving data
+//Global Object 
+
+var CollectionHandler *mongo.Collection 
+var Sys_CollectionHandler *mongo.Collection 
+
 
 //Register system information here (e.g docker images available)
-var sys_info bson.M{
-"server":"private_cloud"
-"docker_images":[]string{"ubuntu","nginx"}
-}
+var sys_info = bson.M {"server":"private_cloud","docker_images":[]string{"ubuntu","nginx"}}
 
 
-func InitiateMongoDB(m *Client) (*Collection) {
+func InitiateMongoDB(m *mongo.Client) (*mongo.Collection,*mongo.Collection) {
 //Create an empty Database first within MongoDB
 // Create appropriate collection which will contain information about user
 // The preferred keys in document ----> username, containerObj {containerName, port}
 
 	db := m.Database("private_cloud")
 	
-	var coll *Collection
-	var sys_coll *Collection
+	var coll *mongo.Collection
+	var sys_coll *mongo.Collection
 
 	// Check if the collection already exists (for users)
 	names, err := db.ListCollectionNames(context.TODO(), nil)
@@ -56,7 +56,7 @@ func InitiateMongoDB(m *Client) (*Collection) {
 	if !userFound {
 		// Create the collection
 		opts := options.CreateCollection().SetMaxDocuments(1000).SetCapped(true)
-		coll, err = db.CreateCollection(context.TODO(), "user_details", opts)
+		err:= db.CreateCollection(context.TODO(), "user_details", opts)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -65,7 +65,7 @@ func InitiateMongoDB(m *Client) (*Collection) {
 	if !sysFound {
 		// Create the collection
 		opts := options.CreateCollection().SetMaxDocuments(1000).SetCapped(true)
-		coll, err = db.CreateCollection(context.TODO(), "system_details", opts)
+		err:= db.CreateCollection(context.TODO(), "system_details", opts)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -145,17 +145,17 @@ func upload_folder(w http.ResponseWriter, r *http.Request) {
 
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = CollectionHandler.FindOne(ctx, bson.M{"username": username}).Decode(&result)
+	err = CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
 		// Update the document if it already exists
-		_, err = CollectionHandler.UpdateOne(ctx, bson.M{"username": username}, bson.M{"$set": bson.M{"folder": folderBytes}})
+		_, err = CollectionHandler.UpdateOne(context.TODO(), bson.M{"username": username}, bson.M{"$set": bson.M{"folder": folderBytes}})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	} else {
 		// Insert a new document if it does not exist
-		_, err = CollectionHandler.InsertOne(ctx, bson.M{"username": username, "folder": folderBytes})
+		_, err = CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "folder": folderBytes})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
