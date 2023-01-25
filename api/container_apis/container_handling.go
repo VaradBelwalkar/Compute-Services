@@ -234,7 +234,7 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string)
 }
 
 //Gives information about the containers that user holds
-func OwnedContainerInfo(ctx context.Context,cli *client.Client)(string,error){
+func OwnedContainerInfo(ctx context.Context,cli string)(string,error){
 	var _ map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
 	var err error
@@ -255,16 +255,6 @@ func OwnedContainerInfo(ctx context.Context,cli *client.Client)(string,error){
 func ImageInfo(ctx context.Context,cli *client.Client){
 	
 	//Make db call to retrieve the available ssh-able images 
-
-
-}
-
-
-
-func getVM(){
-
-//Make the db call to ensure one user only gets only one time access to the VM
-
 
 
 }

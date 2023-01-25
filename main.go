@@ -48,7 +48,7 @@ func main() {
 
 
     // Initiate Docker client
-    Cli_native, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    query_handling.Cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
        panic(err)
     }
