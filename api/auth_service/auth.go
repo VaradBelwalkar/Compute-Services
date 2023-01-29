@@ -1,9 +1,20 @@
-// cookie handling
+package auth_service
+import(
+	"crypto/rand"
+	"fmt"
+	"io"
+	"net/http"
+	"text/template"
+	"github.com/VaradBelwalkar/database_handling"
+	"github.com/VaradBelwalkar/auth_service"
+)
+
+
 
 var cookieHandler = securecookie.New(
 	securecookie.GenerateRandomKey(64),
 	securecookie.GenerateRandomKey(32))
-
+//RECHECK
 func getUserName(request *http.Request) (userName string) {
 	if cookie, err := request.Cookie("session"); err == nil {
 		cookieValue := make(map[string]string)
@@ -14,51 +25,61 @@ func getUserName(request *http.Request) (userName string) {
 	return userName
 }
 
-func setSession(userName string, response http.ResponseWriter) {
-	value := map[string]string{
-		"name": userName,
-	}
-	if encoded, err := cookieHandler.Encode("session", value); err == nil {
-		cookie := &http.Cookie{
-			Name:  "session",
-			Value: encoded,
-			Path:  "/",
-		}
-		http.SetCookie(response, cookie)
-	}
-}
 
-func clearSession(response http.ResponseWriter) {
-	cookie := &http.Cookie{
-		Name:   "session",
-		Value:  "",
-		Path:   "/",
-		MaxAge: -1,
-	}
-	http.SetCookie(response, cookie)
-}
+
+
 
 // login handler
 
-func loginHandler(response http.ResponseWriter, request *http.Request) {
-	name := request.FormValue("name")
+func LoginHandler(response http.ResponseWriter, request *http.Request) {
+	username := request.FormValue("username")
 	pass := request.FormValue("password")
 	redirectTarget := "/"
 	if name != "" && pass != "" {
 		// .. check credentials against db entry
-        
-        //setting coockie based session
-		setSession(name, response)
-		redirectTarget = "/internal"
+        check,err:=Authenticate_user(username,pass)
+		if err!=nil{
+			return err;
+		}
+		if check == false{
+			fmt.Fprintf(response,"Invalid credentials")
+			return 
+		}
+		//Handle JWT signing and header creation 
+		token,err:=SignHandler(username)
+		if err!=nil{
+			return 
+		}
+		tokenString = "Bearer "+token
+		w.Header().Set("Authorization",tokenString)
+		fmt.Fprintf(w,"Authentication Successful")
+
+        //setting cookie based session
+		CreateSession(response,username)
+		//redirectTarget = "/internal"
 	}
-	http.Redirect(response, request, redirectTarget, 302)
+	//http.Redirect(response, request, redirectTarget, 302)
 }
 
 // logout handler
 
-func logoutHandler(response http.ResponseWriter, request *http.Request) {
-	clearSession(response)
-	http.Redirect(response, request, "/", 302)
+func LogoutHandler(response http.ResponseWriter, request *http.Request) {
+	sessionID,session_username,err:= RetrieveSession(request)
+	if err!=nil || session_username == ""{
+		fmt.Printf(w,"Logout Failed")
+		return
+	}
+	username,err:=VerifyHandler(request)
+	if err!=nil || username == ""{
+		fmt.Fprintf(w,"Invalid JWT")
+		return
+	}
+	if session_username!=username{
+		fmt.Fprintf(w,"Invalid Cookie!")
+	}
+
+	DeleteSession(sessionID)
+	//http.Redirect(response, request, "/", 302)
 }
 
 // index page
@@ -75,6 +96,8 @@ const indexPage = `
 `
 
 func indexPageHandler(response http.ResponseWriter, request *http.Request) {
+	// Add CSRF
+
 	fmt.Fprintf(response, indexPage)
 }
 

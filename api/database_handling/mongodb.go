@@ -79,6 +79,34 @@ func InitiateMongoDB(m *mongo.Client) (*mongo.Collection,*mongo.Collection) {
 }
 
 
+//Authenticate user against DB entry
+func Authenticate_user(username string,pass string)(bool,error){
+	//CHANGE THIS LATER
+	var result struct{
+		username string
+		password string
+	}
+
+	err := CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		return false,nil
+	} else if err != nil {
+		log.Fatal(err)
+	} else {
+		// If a document with the specified username already exists, update it
+		if pass == result.password{
+			return true,nil
+		}
+		if err != nil {
+			return false,err
+		}
+	}
+return false,nil
+
+}
+
+
+
 
 //Function to retrieve file-data from request and upload it to the MongoDB 
 func upload_file(w http.ResponseWriter, r *http.Request) {

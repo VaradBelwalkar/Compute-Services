@@ -59,9 +59,9 @@ func main() {
     
     //login to be handled separatly
 
-	router.HandleFunc("/", indexPageHandler)
+	router.HandleFunc("/", RenderForm)
 	router.HandleFunc("/internal", internalPageHandler)
-	router.HandleFunc("/login", loginHandler).Methods("POST")
+	router.HandleFunc("/login", HandleSubmit).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.HandleFunc("/container/run/*", Container_Run)
 	router.HandleFunc("/container/resume/*", Container_Resume)

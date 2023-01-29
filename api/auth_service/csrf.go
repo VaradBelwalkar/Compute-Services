@@ -1,4 +1,4 @@
-package main
+package auth_service
 
 import (
 	"crypto/rand"
@@ -11,7 +11,11 @@ import (
 const csrfTemplate = `
 <html>
 <body>
-<form action="/submit" method="POST">
+<form action="/login" method="POST">
+  <label for="name">User name</label>
+  <input type="text" id="name" name="name">
+  <label for="password">Password</label>
+  <input type="password" id="password" name="password">
   <input type="hidden" name="csrf" value="{{.csrf}}">
   <input type="submit" value="Submit">
 </form>
@@ -31,7 +35,7 @@ func generateCSRFToken() (string, error) {
 
 
 // Render the form
-func renderForm(w http.ResponseWriter, r *http.Request) {
+func RenderForm(w http.ResponseWriter, r *http.Request) {
 	// Generate a CSRF token
 	csrfToken, err := generateCSRFToken()
 	if err != nil {
@@ -39,7 +43,7 @@ func renderForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Save the CSRF token in the user's session
+	// Save the CSRF token in the user's session (will will use this to check against token in the submitted form)
 	session, err := r.Cookie("session")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -54,9 +58,12 @@ func renderForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	//tmpl object expects object  of type map[string]string to update values in the provided form tempate
 	data := map[string]string{
 		"csrf": csrfToken,
 	}
+	//Here The Execute command is first updating the form with data object  i.e updating the fields the tmpl can 
+	//understand i.e {{.csrf}} field and then updating their values and sending the template to frontend
 	if err := tmpl.Execute(w, data); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -65,7 +72,7 @@ func renderForm(w http.ResponseWriter, r *http.Request) {
 
 
 
-func handleSubmit(w http.ResponseWriter, r *http.Request) {
+func HandleSubmit(w http.ResponseWriter, r *http.Request) {
 	// Check the request method
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -81,7 +88,7 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sessionCSRFToken, ok := session.Values["csrf"].(string)
+	sessionCSRFToken, ok := session["csrf"]
 	if !ok {
 		http.Error(w, "Invalid CSRF token", http.StatusBadRequest)
 		return
@@ -92,6 +99,9 @@ func handleSubmit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid CSRF token", http.StatusBadRequest)
 		return
 	}
+	//Returns boolean value whether user is credible or not
+	check,err:=LoginHandler(w,r)
+
 
 	// If the CSRF tokens match, process the form submission
 	// ...

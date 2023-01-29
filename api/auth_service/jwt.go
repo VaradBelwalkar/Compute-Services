@@ -1,10 +1,10 @@
-package main
+package auth_service
 
 import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
+	"strings"
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -61,10 +61,10 @@ func verifyJWT(tokenString string) (jwt.MapClaims, error) {
 
 
 // A handler function that signs a JWT and sends it to the client
-func signHandler(w http.ResponseWriter, r *http.Request) {
+func SignHandler(username string) (string,error){
 	// Set the claims for the JWT
 	claims := jwt.MapClaims{
-		"sub": "user1",
+		"sub": username,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	}
@@ -72,27 +72,27 @@ func signHandler(w http.ResponseWriter, r *http.Request) {
 	// Sign the JWT
 	token, err := signJWT(claims)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return "",err
 	}
 
-	// Send the JWT to the client
-	w.Write([]byte(token))
+	return token,nil
+
 }
 
 
 // A handler function that verifies a JWT sent by the client
-func verifyHandler(w http.ResponseWriter, r *http.Request) {
+func VerifyHandler(r *http.Request) (string,error){
 	// Get the JWT from the request
-	tokenString := r.FormValue("token")
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	tokenString = splitToken[1]
 
 	// Verify the JWT
 	claims, err := verifyJWT(tokenString)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return "",err
 	}
+	
+	return claims["sub"],nil 
 
-	// Write a response
-	w.Write([]byte("JWT verified"))
 }
