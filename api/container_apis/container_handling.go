@@ -14,7 +14,7 @@ import (
 	"crypto/x509"
 	"golang.org/x/crypto/ssh"
 	"encoding/pem"
-	"github.com/VaradBelwalkar/Private-Cloud/api/database_handling"
+	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 )
 //Creating private-public key pairs to be used by the client to ssh into registered container
 func MakeSSHKeyPair() (string, string, error) {

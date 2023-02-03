@@ -5,8 +5,8 @@ import(
 	"io"
 	"net/http"
 	"text/template"
-	"github.com/VaradBelwalkar/database_handling"
-	"github.com/VaradBelwalkar/auth_service"
+	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/database_handling"
+	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/auth_service"
 )
 
 

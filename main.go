@@ -8,8 +8,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
 	"net/http"
-    "github.com/VaradBelwalkar/Private-Cloud/api/database_handling"
-    "github.com/VaradBelwalkar/Private-Cloud/api/query_handling"
+    "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+    "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
     "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	
@@ -69,7 +69,8 @@ func main() {
 	router.HandleFunc("/container/list/*", Container_List)
 	router.HandleFunc("/upload_file/", upload_file)
 	router.HandleFunc("/upload_folder/", upload_folder)
-    router.HandleFunc("/register",register_user)
+    router.HandleFunc("/register",RegisterUser)
+	router.HandleFunc("/remove_account",RemoveAccount)
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8000", nil)

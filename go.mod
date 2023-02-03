@@ -1,4 +1,4 @@
-module github.com/VaradBelwalkar/Private-Cloud
+module github.com/VaradBelwalkar/Private-Cloud-MongoDB
 
 go 1.19
 
