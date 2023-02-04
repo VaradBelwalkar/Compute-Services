@@ -1,12 +1,8 @@
 package auth_service
 import(
-	"crypto/rand"
-	"fmt"
-	"io"
 	"net/http"
-	"text/template"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/database_handling"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/auth_service"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	"github.com/gorilla/securecookie"
 )
 
 
@@ -31,31 +27,43 @@ func getUserName(request *http.Request) (userName string) {
 
 // login handler
 
-func LoginHandler(response http.ResponseWriter, request *http.Request) {
-	username := request.FormValue("username")
-	pass := request.FormValue("password")
-	redirectTarget := "/"
-	if name != "" && pass != "" {
+func LoginHandler(w http.ResponseWriter, r *http.Request) {
+
+		//CSRF handling
+		check:=HandleSubmit(w,r)
+		if check!=true{
+			return
+		}
+
+	username := r.FormValue("username")
+	pass := r.FormValue("password")
+
+	if username != "" || pass != ""{
+		w.WriteHeader(http.StatusBadRequest)
+	} else {
 		// .. check credentials against db entry
-        check,err:=Authenticate_user(username,pass)
-		if err!=nil{
-			return err;
+        check:=db.Authenticate_user(username,pass)
+		if check !=200{
+			if check == 500{
+				w.WriteHeader(http.StatusInternalServerError)
+			} else if check == 404{
+				w.WriteHeader(http.StatusNotFound)
+			}
+			return
 		}
-		if check == false{
-			fmt.Fprintf(response,"Invalid credentials")
-			return 
-		}
+
 		//Handle JWT signing and header creation 
 		token,err:=SignHandler(username)
 		if err!=nil{
-			return 
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
-		tokenString = "Bearer "+token
+		tokenString := "Bearer "+token
 		w.Header().Set("Authorization",tokenString)
-		fmt.Fprintf(w,"Authentication Successful")
+		
 
         //setting cookie based session
-		CreateSession(response,username)
+		CreateSession(w,username)
 		//redirectTarget = "/internal"
 	}
 	//http.Redirect(response, request, redirectTarget, 302)
@@ -63,60 +71,43 @@ func LoginHandler(response http.ResponseWriter, request *http.Request) {
 
 // logout handler
 
-func LogoutHandler(response http.ResponseWriter, request *http.Request) {
-	sessionID,session_username,err:= RetrieveSession(request)
+func LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	sessionID,session_username,err:= RetrieveSession(r)
 	if err!=nil || session_username == ""{
-		fmt.Printf(w,"Logout Failed")
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	username,err:=VerifyHandler(request)
-	if err!=nil || username == ""{
-		fmt.Fprintf(w,"Invalid JWT")
+	username,status:=VerifyHandler(r)
+	if status!=200 || username == ""{
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	if session_username!=username{
-		fmt.Fprintf(w,"Invalid Cookie!")
+		w.WriteHeader(http.StatusForbidden)
+		return
 	}
 
 	DeleteSession(sessionID)
 	//http.Redirect(response, request, "/", 302)
 }
 
-// index page
 
-const indexPage = `
-<h1>Login</h1>
-<form method="post" action="/login">
-    <label for="name">User name</label>
-    <input type="text" id="name" name="name">
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password">
-    <button type="submit">Login</button>
-</form>
-`
 
-func indexPageHandler(response http.ResponseWriter, request *http.Request) {
-	// Add CSRF
-
-	fmt.Fprintf(response, indexPage)
-}
-
-// internal page
-
-const internalPage = `
-<h1>Internal</h1>
-<hr>
-<small>User: %s</small>
-<form method="post" action="/logout">
-    <button type="submit">Logout</button>
-</form>
-`
-
-func internalPageHandler(response http.ResponseWriter, request *http.Request) {
-	userName := getUserName(request)
-	if userName != "" {
-		fmt.Fprintf(response, internalPage, userName)
-	} else {
-		http.Redirect(response, request, "/", 302)
+func Handle_auth(w http.ResponseWriter, r *http.Request) int {
+	_,session_username,err:= RetrieveSession(r)
+	if err!=nil || session_username == ""{
+		w.WriteHeader(http.StatusNotFound)
+		return 304
 	}
+	username,status:=VerifyHandler(r)
+	if status!=200 || username == ""{	
+		return 404
+	}
+	if session_username!=username{
+		w.WriteHeader(http.StatusForbidden)
+		return 404
+	}
+	
+	return 200
+
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"io/ioutil"
+	"golang.org/x/crypto/bcrypt"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -80,7 +81,8 @@ func InitiateMongoDB(m *mongo.Client) (*mongo.Collection,*mongo.Collection) {
 
 
 //Authenticate user against DB entry
-func Authenticate_user(username string,pass string)(bool,error){
+//Returns appropriate statusCodes
+func Authenticate_user(username string,password string)(int){
 	//CHANGE THIS LATER
 	var result struct{
 		username string
@@ -89,19 +91,21 @@ func Authenticate_user(username string,pass string)(bool,error){
 
 	err := CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == mongo.ErrNoDocuments {
-		return false,nil
+		return 404
 	} else if err != nil {
-		log.Fatal(err)
+		return 500
 	} else {
-		// If a document with the specified username already exists, update it
-		if pass == result.password{
-			return true,nil
-		}
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			return false,err
+			return 500
 		}
+		// If a document with the specified username already exists, update it
+		if string(hashedPassword[:]) == result.password{
+			return 200
+		}
+
 	}
-return false,nil
+return 404
 
 }
 

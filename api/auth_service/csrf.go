@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 	"text/template"
 )
 //Here the csrf token is hidden in the form which will be submitted by user in its session
@@ -39,18 +40,15 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 	// Generate a CSRF token
 	csrfToken, err := generateCSRFToken()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}
+	}	
 
-	// Save the CSRF token in the user's session (will will use this to check against token in the submitted form)
-	session, err := r.Cookie("session")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	session.Values["csrf"] = csrfToken
-	http.SetCookie(w, session)
+	 expiration := time.Now().Add(365 * 24 * time.Hour)
+	 cookie    :=    http.Cookie{Name: "csrftoken",Value:csrfToken,Expires:expiration}
+
+
+	http.SetCookie(w, &cookie)
 
 	// Render the form
 	tmpl, err := template.New("form").Parse(csrfTemplate)
@@ -65,44 +63,36 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 	//Here The Execute command is first updating the form with data object  i.e updating the fields the tmpl can 
 	//understand i.e {{.csrf}} field and then updating their values and sending the template to frontend
 	if err := tmpl.Execute(w, data); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
 
-
-func HandleSubmit(w http.ResponseWriter, r *http.Request) {
+// This handles the CSRF submission
+func HandleSubmit(w http.ResponseWriter, r *http.Request) bool {
 	// Check the request method
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
+		return false
 	}
 
 	// Get the CSRF token from the request
 	csrfToken := r.FormValue("csrf")
 
 	// Get the CSRF token from the user's session
-	session, err := r.Cookie("session")
+	sessionCSRFToken, err := r.Cookie("csrftoken")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	sessionCSRFToken, ok := session["csrf"]
-	if !ok {
-		http.Error(w, "Invalid CSRF token", http.StatusBadRequest)
-		return
+		w.WriteHeader(http.StatusBadRequest)
+		return false
 	}
 
 	// Compare the CSRF tokens
-	if csrfToken != sessionCSRFToken {
-		http.Error(w, "Invalid CSRF token", http.StatusBadRequest)
-		return
+	if csrfToken != sessionCSRFToken.Value {
+		w.WriteHeader(http.StatusForbidden)
+		return false
 	}
 	//Returns boolean value whether user is credible or not
-	check,err:=LoginHandler(w,r)
+	return true
 
-
-	// If the CSRF tokens match, process the form submission
-	// ...
 }

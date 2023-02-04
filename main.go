@@ -1,23 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"context"
-	"io"
-	"os"
+	"log"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/securecookie"
 	"net/http"
-    "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
-    "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
-    "github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	
-	"github.com/docker/docker/pkg/stdcopy"
-    "go.mongodb.org/mongo-driver/bson"
+    db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+    qh "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
+	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
+	"github.com/docker/docker/client"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 )
 
@@ -48,29 +41,31 @@ func main() {
 
 
     // Initiate Docker client
-    query_handling.Cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    Cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
        panic(err)
     }
     defer Cli.Close()
 
 	//Get handler for the "user_details" collection (creates collection if not exists)
-    database_handling.CollectionHandler,database_handling.Sys_CollectionHandler=InitiateMongoDB(mongo_client);
+    db.CollectionHandler,db.Sys_CollectionHandler=db.InitiateMongoDB(mongo_client);
     
     //login to be handled separatly
 
-	router.HandleFunc("/", RenderForm)
-	router.HandleFunc("/internal", internalPageHandler)
-	router.HandleFunc("/login", HandleSubmit).Methods("POST")
-	router.HandleFunc("/logout", logoutHandler).Methods("POST")
-	router.HandleFunc("/container/run/*", Container_Run)
-	router.HandleFunc("/container/resume/*", Container_Resume)
-	router.HandleFunc("/container/<regex>/*", Container_Stop_or_Remove)
-	router.HandleFunc("/container/list/*", Container_List)
-	router.HandleFunc("/upload_file/", upload_file)
-	router.HandleFunc("/upload_folder/", upload_folder)
-    router.HandleFunc("/register",RegisterUser)
-	router.HandleFunc("/remove_account",RemoveAccount)
+	router.HandleFunc("/", as.RenderForm)								//DONE			
+	router.HandleFunc("/login", as.LoginHandler).Methods("POST")		//DONE
+	router.HandleFunc("/login", as.RenderForm).Methods("GET")			//DONE
+	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
+	router.HandleFunc("/container/run/*", qh.Container_Run)
+	router.HandleFunc("/container/resume/*", qh.Container_Resume)
+	router.HandleFunc("/container/<regex>/*", qh.Container_Stop_or_Remove)
+	router.HandleFunc("/container/list/*", qh.Container_List)
+	router.HandleFunc("/upload_file/", qh.Upload_file)			//yet to be determined
+	router.HandleFunc("/upload_folder/", qh.Upload_folder)		//yet to be determined
+    router.HandleFunc("/register",as.RenderForm).Methods("GET")	   	//DONE
+	router.HandleFunc("/register",qh.RegisterUser).Methods("POST")     //DONE
+	router.HandleFunc("/remove_account",as.RenderForm).Methods("GET")	//DONE
+	router.HandleFunc("/remove_account",qh.RemoveAccount).Methods("POST")  //DONE
 
 	http.Handle("/", router)
 	http.ListenAndServe(":8000", nil)

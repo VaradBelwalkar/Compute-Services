@@ -3,7 +3,9 @@ package auth_service
 import (
 	"fmt"
 	"io/ioutil"
+	"crypto/rsa"
 	"net/http"
+	"time"
 	"strings"
 	"github.com/dgrijalva/jwt-go"
 )
@@ -15,6 +17,7 @@ var secretKey []byte
 var publicKey *rsa.PublicKey
 
 // Initialize the secret key and public key
+//CALL THIS AT THE INITIALIZATION
 func init() {
 	// Read the secret key from a file
 	key, err := ioutil.ReadFile("private.pem")
@@ -42,7 +45,7 @@ func signJWT(claims jwt.MapClaims) (string, error) {
 }
 
 // Verify a JWT using the HS256 algorithm
-func verifyJWT(tokenString string) (jwt.MapClaims, error) {
+func verifyJWT(tokenString string) (jwt.MapClaims, int) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Check the signing algorithm
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -51,12 +54,12 @@ func verifyJWT(tokenString string) (jwt.MapClaims, error) {
 		return secretKey, nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, 404
 	}
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
+		return claims, 200
 	}
-	return nil, fmt.Errorf("Invalid JWT")
+	return nil,404
 }
 
 
@@ -81,18 +84,18 @@ func SignHandler(username string) (string,error){
 
 
 // A handler function that verifies a JWT sent by the client
-func VerifyHandler(r *http.Request) (string,error){
+func VerifyHandler(r *http.Request) (string,int){
 	// Get the JWT from the request
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
-	tokenString = splitToken[1]
+	tokenString := splitToken[1]
 
 	// Verify the JWT
-	claims, err := verifyJWT(tokenString)
-	if err != nil {
-		return "",err
+	claims, status := verifyJWT(tokenString)
+	if status != 200 {
+		return "",status
 	}
 	
-	return claims["sub"],nil 
+	return claims["sub"].(string),200 
 
 }

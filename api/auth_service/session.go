@@ -1,8 +1,9 @@
 package auth_service
 
 import (
-	"fmt"
 	"net/http"
+	"math/rand"
+	"time"
 )
 
 
@@ -48,7 +49,7 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
 
-var sessions = map[string]string
+var sessions  map[string]string
 
 func generateSessionID(n int) string {
     b := make([]rune, n)
@@ -86,9 +87,7 @@ func CreateSession(w http.ResponseWriter,username string) {
 		Name:  "session",
 		Value: sessionID,
 	})
-
-	// Write a response
-	w.Write([]byte("Session created"))
+	w.WriteHeader(http.StatusOK)
 }
 
 // A handler function that retrieves a session by ID
@@ -100,14 +99,13 @@ func RetrieveSession(r *http.Request) (string,string,error){
 	}
 
 	// Get the session by ID
-	username, ok := sessions[sessionID]
+	username, ok := sessions[sessionID.Value]
 	if ok == false {
 			//If session doesn't exist do something here
 			return "","",nil
-	}
-	else{
+	} else{
 		//Session exists, proceed with JWT authorization
-		return sessionID,username,nil
+		return sessionID.Value,username,nil
 	}
 
 }

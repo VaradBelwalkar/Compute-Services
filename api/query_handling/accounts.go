@@ -4,7 +4,8 @@ import (
 
 	"context"
 	"net/http"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
 	"golang.org/x/crypto/bcrypt"
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -12,10 +13,17 @@ import (
 
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
+
+	//CSRF handling
+	check:=as.HandleSubmit(w,r)
+	if check!=true{
+		return
+	}
+
 	// Parse the POST request body and retrieve the form values
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)  // Here status code is 400
 		return
 	}
 
@@ -24,41 +32,48 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	if username == "" || password == "" {
-		http.Error(w, "Username and password are required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = database_handling.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
+	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
-		http.Error(w, "Username already exists!", http.StatusBadRequest)
+		w.WriteHeader( http.StatusConflict)
 	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
 
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Insert the new user into the database
-	_, err = database_handling.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "hashed_password": hashedPassword})
+	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "hashed_password": hashedPassword})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	// Return a success response
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)  
 }
 }
 
 // Parse and authenticate the user and then remove the account from the database
 func RemoveAccount(w http.ResponseWriter, r *http.Request) {
+
+	//CSRF handling
+	check:=as.HandleSubmit(w,r)
+	if check!=true{
+		return
+	}
+	
 	// Parse the POST request body and retrieve the form values
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -67,30 +82,32 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
 	if username == "" || password == "" {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = database_handling.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
+	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
 		
 			// Hash the password
-		_, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
+		//Check if the password matches
+		if string(hashedPassword[:]) == result["hashed_password"]{
 		// Remove the user document from the user_details
 
-		_,err = database_handling.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
+		_,err = db.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)	
-
+		w.WriteHeader(http.StatusOK)} else{
+			w.WriteHeader(http.StatusForbidden)
+		}	
 
 	} else{
 
