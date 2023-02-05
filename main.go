@@ -58,7 +58,8 @@ func main() {
 	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
 	router.HandleFunc("/container/run/*", qh.Container_Run)
 	router.HandleFunc("/container/resume/*", qh.Container_Resume)
-	router.HandleFunc("/container/<regex>/*", qh.Container_Stop_or_Remove)
+	router.HandleFunc("/container/stop/*", qh.Container_Stop)
+	router.HandleFunc("/container/remove/*", qh.Container_Remove)
 	router.HandleFunc("/container/list/*", qh.Container_List)
 	router.HandleFunc("/upload_file/", qh.Upload_file)			//yet to be determined
 	router.HandleFunc("/upload_folder/", qh.Upload_folder)		//yet to be determined

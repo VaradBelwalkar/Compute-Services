@@ -93,21 +93,22 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 
 
-func Handle_auth(w http.ResponseWriter, r *http.Request) int {
+func Handle_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 	_,session_username,err:= RetrieveSession(r)
 	if err!=nil || session_username == ""{
 		w.WriteHeader(http.StatusNotFound)
-		return 304
+		return false,""
 	}
 	username,status:=VerifyHandler(r)
 	if status!=200 || username == ""{	
-		return 404
+		w.WriteHeader(http.StatusForbidden)
+		return false,""
 	}
 	if session_username!=username{
 		w.WriteHeader(http.StatusForbidden)
-		return 404
+		return false,""
 	}
 	
-	return 200
+	return true,username
 
 }

@@ -2,11 +2,7 @@ package database_handling
 
 import (
 	"context"
-	"io"
-	"fmt"
 	"log"
-	"net/http"
-	"io/ioutil"
 	"golang.org/x/crypto/bcrypt"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -108,98 +104,5 @@ func Authenticate_user(username string,password string)(int){
 return 404
 
 }
-
-
-
-
-//Function to retrieve file-data from request and upload it to the MongoDB 
-func upload_file(w http.ResponseWriter, r *http.Request) {
-
-	// Read the file from the request
-	file, _, err := r.FormFile("file")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	// Convert the file to a byte slice
-	buf := make([]byte, 1024)
-	var fileBytes []byte
-	for {
-		n, err := file.Read(buf)
-		if err != nil && err != io.EOF {
-			log.Fatal(err)
-		}
-		if n == 0 {
-			break
-		}
-		fileBytes = append(fileBytes, buf[:n]...)
-	}
-
-	// Get the username from the request
-	username := r.FormValue("username")
-
-	// Check if a document with the specified username already exists
-	var result bson.M
-	err = CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-		// If no such document exists, create a new one
-		_, err = CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "file": fileBytes})
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(w, "File uploaded successfully!")
-	} else if err != nil {
-		log.Fatal(err)
-	} else {
-		// If a document with the specified username already exists, update it
-		_, err = CollectionHandler.UpdateOne(context.TODO(), bson.M{"username": username}, bson.M{"$set": bson.M{"file": fileBytes}})
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Fprintf(w, "File updated successfully!")
-	}
-}
-
-
-
-//Retrieve the folder bytes from the request and upload it to the MongoDB
-func upload_folder(w http.ResponseWriter, r *http.Request) {
-	// Parse the POST request body and retrieve the folder in bytes
-	folderBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	// Retrieve the username from the request
-	username := r.FormValue("username")
-
-	// Check if a document with the given username already exists
-	var result bson.M
-	err = CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
-	if err == nil {
-		// Update the document if it already exists
-		_, err = CollectionHandler.UpdateOne(context.TODO(), bson.M{"username": username}, bson.M{"$set": bson.M{"folder": folderBytes}})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	} else {
-		// Insert a new document if it does not exist
-		_, err = CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "folder": folderBytes})
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-	}
-
-	// Return a success response
-	w.WriteHeader(http.StatusOK)
-}
-
-
-
-
 
 
