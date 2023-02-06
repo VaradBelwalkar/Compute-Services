@@ -20,20 +20,20 @@ var publicKey *rsa.PublicKey
 //CALL THIS AT THE INITIALIZATION
 func init() {
 	// Read the secret key from a file
-	key, err := ioutil.ReadFile("private.pem")
+	key, err := ioutil.ReadFile("/home/varad/repositories/Private-Cloud-MongoDB/api/auth_service/private.pem")
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 	secretKey = key
 
 	// Read the public key from a file
-	pem, err := ioutil.ReadFile("public.pem")
+	pem, err := ioutil.ReadFile("/home/varad/repositories/Private-Cloud-MongoDB/api/auth_service/public.pem")
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 	publicKey, err = jwt.ParseRSAPublicKeyFromPEM(pem)
 	if err != nil {
-		panic(err)
+		//panic(err)
 	}
 }
 

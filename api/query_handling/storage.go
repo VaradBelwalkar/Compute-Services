@@ -19,7 +19,7 @@ type storageInfoStruct struct{
 
 
 //Function to retrieve file-data from request and upload it to the MongoDB 
-func upload_file(w http.ResponseWriter, r *http.Request) {
+func Upload_file(w http.ResponseWriter, r *http.Request) {
 	check,username:=as.Handle_auth(w,r)
 	if check!=true{
 		return
@@ -78,7 +78,7 @@ func upload_file(w http.ResponseWriter, r *http.Request) {
 
 
 //Function to retrieve file-data from request and upload it to the MongoDB 
-func upload_folder(w http.ResponseWriter, r *http.Request) {
+func Upload_folder(w http.ResponseWriter, r *http.Request) {
 	check,username:=as.Handle_auth(w,r)
 	if check!=true{
 		return

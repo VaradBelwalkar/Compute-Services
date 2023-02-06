@@ -5,6 +5,9 @@ import (
 	"log"
 	"github.com/gorilla/mux"
 	"net/http"
+	"fmt"
+	"os"
+	"path/filepath"
     db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
     qh "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
@@ -21,7 +24,12 @@ const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
 // The main function manages all the query handling and manages the database as well
 func main() {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+			log.Fatal(err)
+	}
 
+	fmt.Println(dir)
     // server main method
 
     var router = mux.NewRouter()
