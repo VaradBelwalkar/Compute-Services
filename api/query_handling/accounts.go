@@ -17,12 +17,14 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	//CSRF handling
 	check:=as.HandleSubmit(w,r)
 	if check!=true{
+	
 		return
 	}
-
+	
 	// Parse the POST request body and retrieve the form values
 	err := r.ParseForm()
 	if err != nil {
+		
 		w.WriteHeader(http.StatusBadRequest)  // Here status code is 400
 		return
 	}
@@ -31,6 +33,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	// Validate the form values
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
+
 	if username == "" || password == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -39,9 +42,9 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	var result bson.M
 	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
+
 		w.WriteHeader( http.StatusConflict)
 	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
-
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -86,7 +89,12 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Check if a document with the given username already exists
-	var result bson.M
+	type resultStruct struct{
+		username string
+		hashed_password []byte
+	}
+
+	result:=resultStruct{}
 	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
 		
@@ -97,7 +105,7 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//Check if the password matches
-		if string(hashedPassword[:]) == result["hashed_password"]{
+		if string(hashedPassword[:]) == string(result.hashed_password[:]){
 		// Remove the user document from the user_details
 
 		_,err = db.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})

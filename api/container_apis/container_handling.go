@@ -15,7 +15,7 @@ import (
 	"crypto/x509"
 	"golang.org/x/crypto/ssh"
 	"encoding/pem"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 )
 //Creating private-public key pairs to be used by the client to ssh into registered container
 func MakeSSHKeyPair() (string, string, int) {
@@ -51,7 +51,7 @@ func get_document(ctx context.Context,username string)(map[string]interface{}, i
 	var documentData map[string]interface{} 
 	//Check user-document exists in the collection 
 	//document_handler of type *SingleResult, see github code for more details
-	err := database_handling.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
+	err := db.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
 	//If not then use following	
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -122,7 +122,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 		"containerInfo":bson.M{containerName:bson.M{"containerID":resp.ID,"port":port,"status":"running"}},
 	}
 
-	updateResult,err:=database_handling.CollectionHandler.UpdateOne(ctx,filter,update)
+	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
 		return "","",500
 	}
@@ -175,7 +175,7 @@ func ContainerStop(ctx context.Context,cli *client.Client,containerName string,u
 		"containerInfo":bson.M{containerName:bson.M{"status":"stopped"}},
 	}
 
-	updateResult,err:=database_handling.CollectionHandler.UpdateOne(ctx,filter,update)
+	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
 		return 500
 	}	
@@ -227,7 +227,7 @@ func ContainerRemove(ctx context.Context,cli *client.Client,containerName string
 	update:=bson.M{
 		"containerInfo":bson.M{"$unset":bson.M{containerName:"",}},
 	}
-	updateResult,check:=database_handling.CollectionHandler.UpdateOne(ctx,filter,update)
+	updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if check!=nil || updateResult.MatchedCount!=1{
 		return 500
 	}	
@@ -302,7 +302,7 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 		"containerInfo":bson.M{"$unset":bson.M{containerName:"",},"$set":bson.M{newContainerName:bson.M{"containerID":containerID,"port":port,"status":"running"},}},
 		
 	}
-	updateResult,check:=database_handling.CollectionHandler.UpdateOne(ctx,filter,update)
+	updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if check!=nil || updateResult.MatchedCount!=1{
 		return "","",500
 	}

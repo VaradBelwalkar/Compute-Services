@@ -40,6 +40,7 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 	// Generate a CSRF token
 	csrfToken, err := generateCSRFToken()
 	if err != nil {
+		fmt.Println("sdlfkjldskj")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}	
@@ -83,6 +84,7 @@ func HandleSubmit(w http.ResponseWriter, r *http.Request) bool {
 	// Get the CSRF token from the user's session
 	sessionCSRFToken, err := r.Cookie("csrftoken")
 	if err != nil {
+		fmt.Println("dsfkj")
 		w.WriteHeader(http.StatusBadRequest)
 		return false
 	}

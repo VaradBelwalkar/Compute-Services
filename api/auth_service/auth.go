@@ -38,7 +38,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	username := r.FormValue("username")
 	pass := r.FormValue("password")
 
-	if username != "" || pass != ""{
+	if username == "" || pass == ""{
 		w.WriteHeader(http.StatusBadRequest)
 	} else {
 		// .. check credentials against db entry
