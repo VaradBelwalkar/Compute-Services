@@ -6,7 +6,6 @@ import (
 	"net/http"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
-	"golang.org/x/crypto/bcrypt"
 	"go.mongodb.org/mongo-driver/bson"
 )
 // Here the user will be authenticated first and then request will be fulfilled
@@ -44,16 +43,12 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 
 		w.WriteHeader( http.StatusConflict)
-	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
-	// Hash the password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return
-	}
+	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
+
 
 	// Insert the new user into the database
-	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "hashed_password": hashedPassword})
+	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": password})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -90,22 +85,16 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	// Check if a document with the given username already exists
 	type resultStruct struct{
-		username string
-		hashed_password []byte
+		Username string
+		Password string
 	}
 
 	result:=resultStruct{}
 	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
-		
-			// Hash the password
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+
 		//Check if the password matches
-		if string(hashedPassword[:]) == string(result.hashed_password[:]){
+		if password == result.Password{
 		// Remove the user document from the user_details
 
 		_,err = db.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})

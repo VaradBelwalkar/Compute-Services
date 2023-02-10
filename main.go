@@ -26,6 +26,8 @@ const url = "mongodb://localhost:27017/"
 
 // The main function manages all the query handling and manages the database as well
 func main() {
+
+	as.Sessions=make(map[string]string)
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 			log.Fatal(err)
@@ -51,11 +53,11 @@ func main() {
 
 
     // Initiate Docker client
-    Cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+    qh.Cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
        panic(err)
     }
-    defer Cli.Close()
+    defer qh.Cli.Close()
 
 	//Get handler for the "user_details" collection (creates collection if not exists)
     db.CollectionHandler,db.Sys_CollectionHandler=db.InitiateMongoDB(mongo_client);
@@ -66,11 +68,11 @@ func main() {
 	router.HandleFunc("/login", as.LoginHandler).Methods("POST")		//DONE
 	router.HandleFunc("/login", as.RenderForm).Methods("GET")			//DONE
 	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
-	router.HandleFunc("/container/run/", qh.Container_Run)
-	router.HandleFunc("/container/resume/", qh.Container_Resume)
-	router.HandleFunc("/container/stop/", qh.Container_Stop)
-	router.HandleFunc("/container/remove/", qh.Container_Remove)
-	router.HandleFunc("/container/list/containers", qh.Container_List)
+	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("GET")
+	router.HandleFunc("/container/resume/{container}", qh.Container_Resume).Methods("GET")
+	router.HandleFunc("/container/stop/{container}", qh.Container_Stop).Methods("GET")
+	router.HandleFunc("/container/remove/{container}", qh.Container_Remove).Methods("GET")
+	router.HandleFunc("/container/list/containers", qh.Container_List).Methods("GET")
 	router.HandleFunc("/upload_file/", qh.Upload_file)			//yet to be determined
 	router.HandleFunc("/upload_folder/", qh.Upload_folder)		//yet to be determined
     router.HandleFunc("/register",as.RenderForm).Methods("GET")	   	//DONE

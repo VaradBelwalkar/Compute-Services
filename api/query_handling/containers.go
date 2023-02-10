@@ -5,9 +5,10 @@ import (
 	"context"
 	"net/http"
 	"encoding/json"
+	"fmt"
+	"github.com/gorilla/mux"
 	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
-	"path/filepath"
 	"github.com/docker/docker/client"
 )
 // Here the user will be authenticated first and then request will be fulfilled
@@ -29,13 +30,10 @@ func Container_Run(w http.ResponseWriter, r *http.Request) {
 	if check!=true{
 		return
 	}
-
- 	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := r.URL.Path // Suppose "/foo/bar/something"
-	imageName:=filepath.Base(URLPath) // will output "something"
+	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	privateKey,Port,err:=ca.ContainerCreate(ctx,Cli,imageName,username)	
+	privateKey,Port,err:=ca.ContainerCreate(context.TODO(),Cli,vars["image"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
@@ -43,8 +41,9 @@ func Container_Run(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	resp:=responseStruct{privatekey:privateKey,port:Port}
-	json.NewEncoder(w).Encode(resp)
+	resp:=map[string]string{"privatekey":privateKey,"port":Port}
+	b, _ := json.Marshal(resp)
+	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")
 
 	//Send reponse in the body
@@ -60,19 +59,19 @@ func Container_Resume(w http.ResponseWriter, r *http.Request) {
 
  	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := r.URL.Path // Suppose "/foo/bar/something"
-	containerName:=filepath.Base(URLPath) // will output "something"
+	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	privateKey,Port,err:=ca.ContainerStart(ctx,Cli,containerName,username)	
+	privateKey,Port,err:=ca.ContainerStart(ctx,Cli,vars["container"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 		}
 	}
-
-	resp:=responseStruct{privatekey:privateKey,port:Port}
-	json.NewEncoder(w).Encode(resp)
+	resp:=map[string]string{"privatkey":privateKey,"port":Port}
+	//resp:=responseStruct{privatekey:privateKey,port:Port}
+	b, _ := json.Marshal(resp)
+	json.NewEncoder(w).Encode(b)
 	w.Header().Set("Content-Type", "application/json")
 
 	//Send reponse in the body
@@ -96,9 +95,10 @@ func Container_List(w http.ResponseWriter, r *http.Request) {
 		return
 		}
 	}
-
-	resp:=infoStruct{containerInfo:containerArray}
-	json.NewEncoder(w).Encode(resp)
+	fmt.Println("THIS IS Working")
+	fmt.Println(containerArray)
+	b, _ := json.Marshal(containerArray)
+	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")
 
 	//Send reponse in the body
@@ -114,10 +114,9 @@ func Container_Stop(w http.ResponseWriter, r *http.Request) {
 
  	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := r.URL.Path // Suppose "/foo/bar/something"
-	containerName:=filepath.Base(URLPath) // will output "something"
+	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	err:=ca.ContainerStop(ctx,Cli,containerName,username)	
+	err:=ca.ContainerStop(ctx,Cli,vars["container"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
@@ -144,10 +143,9 @@ func Container_Remove(w http.ResponseWriter, r *http.Request) {
 
  	ctx := context.Background()
 	//Extracting required string from the request Structure
-    URLPath := r.URL.Path // Suppose "/foo/bar/something"
-	containerName:=filepath.Base(URLPath) // will output "something"
+	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	err:=ca.ContainerRemove(ctx,Cli,containerName,username)	
+	err:=ca.ContainerRemove(ctx,Cli,vars["container"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)

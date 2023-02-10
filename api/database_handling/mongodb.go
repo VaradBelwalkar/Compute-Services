@@ -4,13 +4,18 @@ import (
 	"context"
 	"log"
 	"fmt"
-	"golang.org/x/crypto/bcrypt"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
+	
 //Global Objects 
+type resultStruct struct{
+	Username string `bson:"username"`
+	Password string `bson:"password"`
+	totalOwnedContainers int `bson:"totalOwnedContainers"`
+	containerInfo map[string]interface{} `bson:"containerInfo"`
+}
 
 var CollectionHandler *mongo.Collection 
 var Sys_CollectionHandler *mongo.Collection 
@@ -83,11 +88,6 @@ return db.Collection("user_details"),db.Collection("system_details")
 //Returns appropriate statusCodes
 func Authenticate_user(username string,password string)(int){
 	//CHANGE THIS LATER
-	type resultStruct struct{
-		username string
-		password []byte
-	}
-
 	result:=resultStruct{}
 
 	err := CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
@@ -97,15 +97,11 @@ func Authenticate_user(username string,password string)(int){
 	} else if err != nil {
 		return 500
 	} else {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			return 500
-		}
+
 		// If a document with the specified username already exists, update it
-		if string(hashedPassword[:]) == string(result.password[:]){
+		if password == result.Password{
 			return 200
 		}
-		fmt.Println("again problem with hashing")
 	}
 return 404
 

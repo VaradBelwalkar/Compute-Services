@@ -49,19 +49,19 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
 
-var sessions  map[string]string
+var Sessions map[string]string
 
 func generateSessionID(n int) string {
     b := make([]rune, n)
     for i := range b {
         b[i] = letters[rand.Intn(len(letters))]
     }
-	_, ok := sessions[string(b)]
+	_, ok := Sessions[string(b)]
 	for ok==true{
 		for i := range b {
 			b[i] = letters[rand.Intn(len(letters))]
 		}
-		_, ok = sessions[string(b)]
+		_, ok = Sessions[string(b)]
 	}
     return string(b)
 }
@@ -69,7 +69,7 @@ func generateSessionID(n int) string {
 
 // Save a session
 func saveSession(sessionID string,username string) {
-	sessions[sessionID] = username
+	Sessions[sessionID] = username
 }
 
 
@@ -78,10 +78,8 @@ func CreateSession(w http.ResponseWriter,username string) {
 	// Create a new session
 	rand.Seed(time.Now().UnixNano())
 	sessionID := generateSessionID(10)
-
 	// Save the session
 	saveSession(sessionID,username)
-
 	// Set the session ID as a cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:  "session",
@@ -97,9 +95,8 @@ func RetrieveSession(r *http.Request) (string,string,error){
 	if err != nil {
 		return "","",err
 	}
-
 	// Get the session by ID
-	username, ok := sessions[sessionID.Value]
+	username, ok := Sessions[sessionID.Value]
 	if ok == false {
 			//If session doesn't exist do something here
 			return "","",nil
@@ -112,7 +109,7 @@ func RetrieveSession(r *http.Request) (string,string,error){
 
 //To be called in Logout handler
 func DeleteSession(sessionID string){
-	delete(sessions,sessionID)
+	delete(Sessions,sessionID)
 }
 
 

@@ -1,9 +1,13 @@
-package container_apis
+package container_apisyy
 
 import (
 	"context"
+	"io/ioutil"
 	"strings"
 	"time"
+	"fmt"
+	"bytes"
+	"archive/tar"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/docker/docker/api/types"
@@ -17,6 +21,15 @@ import (
 	"encoding/pem"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 )
+
+type resultStruct struct{
+	Username string `bson:"username"`
+	Password string `bson:"password"`
+	ContainerInfo map[string]interface{} `bson:"containerInfo"`
+	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
+}
+
+
 //Creating private-public key pairs to be used by the client to ssh into registered container
 func MakeSSHKeyPair() (string, string, int) {
     privateKey, err := rsa.GenerateKey(rand.Reader, 1024)
@@ -41,26 +54,27 @@ func MakeSSHKeyPair() (string, string, int) {
     var pubKeyBuf strings.Builder
     pubKeyBuf.Write(ssh.MarshalAuthorizedKey(pub))
 
-    return pubKeyBuf.String(), privKeyBuf.String(), 200
+    return  privKeyBuf.String(),pubKeyBuf.String(), 200
 }
 
 
 //Function to return err if document not found
-func get_document(ctx context.Context,username string)(map[string]interface{}, int){
+func get_document(ctx context.Context,username string)(resultStruct, int){
 
-	var documentData map[string]interface{} 
+	documentData:=resultStruct{}
 	//Check user-document exists in the collection 
 	//document_handler of type *SingleResult, see github code for more details
 	err := db.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
 	//If not then use following	
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil,404
+			return resultStruct{},404
 		} else {
-			return nil,500
+			return resultStruct{},500
 		}
 	}	
-
+		fmt.Println(documentData)
+		fmt.Println(documentData.TotalOwnedContainers)
 return documentData,200
 
 }
@@ -68,7 +82,6 @@ return documentData,200
 
 //Create a new container
 func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,username string) (string,string,int){
-
 	documentData, status := get_document(context.TODO(),username)
 	if status!= 200{
 		return "","",status
@@ -76,57 +89,127 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	//Here we get the document to work with
 
 	
-	totalOwnedContainers := documentData["totalOwnedContainers"].(int)
+	totalOwnedContainers := documentData.TotalOwnedContainers
 	
 		if totalOwnedContainers>=5 {
 			return "","",406		// http.StatusNotAcceptable
 		}
 	
 	//Else do allocate the container	
-
-	containerConfig:=container.Config{Image:imageName}
-	portBinding:=nat.PortBinding{HostIP:"0.0.0.0"}	
-	portBindings:=make(nat.PortMap)
-	portBindings["22/tcp"][0]=portBinding		// A PortMap
-	hostConfig:=container.HostConfig{PortBindings:portBindings}
-
-    resp, err := cli.ContainerCreate(ctx,&containerConfig,&hostConfig,nil,nil,"")
+	containerCfg := &container.Config {
+		Image: imageName,
+		AttachStdin:false,
+		AttachStdout:false,
+		AttachStderr:false,
+		OpenStdin:false,
+		Cmd: []string{"service","ssh","start", "-D", "daemon on;"},
+		ExposedPorts: nat.PortSet{
+			//nat.Port("443/tcp"): {},
+			nat.Port("22/tcp"): {},
+		},
+	}
+	
+	hostConfig := &container.HostConfig{
+		PortBindings: nat.PortMap{
+			//nat.Port("443/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "443"}},
+			nat.Port("22/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0"}}, //Here excluding HostPort to assign a random port 
+		},
+	}
+	
+    resp, err := cli.ContainerCreate(ctx,containerCfg,hostConfig,nil,nil,"")
     if err != nil {
+		fmt.Println(err)
         return "","",500
     }
 
+    if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+        return "","",500
+    }
+
+
+	//statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+    //select {
+    //case err := <-errCh:
+    //    if err != nil {
+    //      return "","",500
+    //    }
+    //case <-statusCh:
+    //}
+	
 	privateKey,publicKey,check:= MakeSSHKeyPair()
 	if check!=200 {
+		
 		return "","",check
 	}
-
+	
 	//First make a tar archive for the public key generated above 
-	buf := strings.NewReader(publicKey)
-	err =cli.CopyToContainer(context.Background(), resp.ID, "/home/user/.ssh/",buf ,types.CopyToContainerOptions{})
-	if err!=nil{
+	//buf := strings.NewReader(publicKey)
+
+	str := []byte(publicKey)
+	b := new(bytes.Buffer)
+
+	// Create a new tar archive
+	tw := tar.NewWriter(b)
+
+	// Add the string to the archive
+	hdr := &tar.Header{
+		Name: "authorized_keys",
+		Mode: 0600,
+		Size: int64(len(str)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
 		return "","",500
 	}
+	if _, err := tw.Write(str); err != nil {
+		return "","",500
+	}
+	if err := tw.Close(); err != nil {
+		return "","",500
+	}	
+	r := bytes.NewReader(b.Bytes())
+
+	t, err := ioutil.ReadAll(r)
+	if err != nil {
+
+		return "","",500
+	}
+	tempString:=string(t)
+	readBuf := strings.NewReader(tempString)
+	err =cli.CopyToContainer(context.Background(), resp.ID, "/root/.ssh/",readBuf ,types.CopyToContainerOptions{})
+	if err!=nil{
+		fmt.Println(err)
+		
+		return "","",500
+	}
+	
 	// Handle db call to store the resp.ID into the appropriate row for the user
 	containerJSON,err:=cli.ContainerInspect(ctx,resp.ID)
 	if err!=nil{
+		
 	return "","",500
 	}
+
 	port:=containerJSON.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
+	fmt.Println(port)
 	containerName:=username+"_"+port
+	fmt.Println(containerName)
 	// Here count is updated but not container information, hence do update that
+	//opts := options.Update().SetUpsert(true)
+	//fmt.Println(opts)
 	filter:=bson.M{
 		"username":username,
 	}
-	update:=bson.M{
+
+	update:=bson.M{ "$set":bson.M{
 		"totalOwnedContainers":totalOwnedContainers+1,
-		"containerInfo":bson.M{containerName:bson.M{"containerID":resp.ID,"port":port,"status":"running"}},
-	}
+		"containerInfo."+containerName:bson.M{"containerID":resp.ID,"port":port,"status":"running"},
+	}}
 
 	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
+		fmt.Println(err)
 		return "","",500
 	}
-
 return privateKey,port,200
 }
 
@@ -145,9 +228,9 @@ func ContainerStop(ctx context.Context,cli *client.Client,containerName string,u
 	}
 	var containerID string
 
-	nesting1:=documentData["containerInfo"].(map[string]interface{})//[containerName].(map[string]interface{})["containerID"].(string)
+	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]interface{})["containerID"].(string)
+		containerID=nesting2.(map[string]string)["containerID"]
 	} else{
 		return 404 // Send StatusNotFound
 	}
@@ -172,7 +255,7 @@ func ContainerStop(ctx context.Context,cli *client.Client,containerName string,u
 		"username":username,
 	}
 	update:=bson.M{
-		"containerInfo":bson.M{containerName:bson.M{"status":"stopped"}},
+		"containerInfo."+containerName:bson.M{"status":"stopped"},
 	}
 
 	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
@@ -199,9 +282,9 @@ func ContainerRemove(ctx context.Context,cli *client.Client,containerName string
 
 	var containerID string
 
-	nesting1:=documentData["containerInfo"].(map[string]interface{})//[containerName].(map[string]interface{})["containerID"].(string)
+	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]interface{})["containerID"].(string)
+		containerID=nesting2.(map[string]string)["containerID"]
 	} else{
 		return 404 // Send StatusNotFound
 	}
@@ -255,9 +338,9 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 
 	var containerID string
 
-	nesting1:=documentData["containerInfo"].(map[string]interface{})//[containerName].(map[string]interface{})["containerID"].(string)
+	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]interface{})["containerID"].(string)
+		containerID=nesting2.(map[string]string)["containerID"]
 	} else{
 		return "","",404 // Send StatusNotFound
 	}
@@ -280,9 +363,41 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 		return "","",err
 	}
 
-	//First make a tar archive for the public key generated above 
-	buf := strings.NewReader(publicKey)
-	check :=cli.CopyToContainer(context.Background(), containerID, "/home/user/.ssh/", buf,types.CopyToContainerOptions{})
+	str := []byte(publicKey)
+	b := new(bytes.Buffer)
+
+	// Create a new tar archive
+	tw := tar.NewWriter(b)
+
+	// Add the string to the archive
+	hdr := &tar.Header{
+		Name: "authorized_keys",
+		Mode: 0600,
+		Size: int64(len(str)),
+	}
+	if err := tw.WriteHeader(hdr); err != nil {
+		fmt.Println(err)
+		return "","",500
+	}
+	if _, err := tw.Write(str); err != nil {
+		fmt.Println(err)
+		return "","",500
+	}
+	if err := tw.Close(); err != nil {
+		fmt.Println(err)
+		return "","",500
+	}
+	
+	r := bytes.NewReader(b.Bytes())
+
+	t, errInfo := ioutil.ReadAll(r)
+	if errInfo != nil {
+		fmt.Println(err)
+		return "","",500
+	}
+	tempString:=string(t)
+	readBuf := strings.NewReader(tempString)
+	check :=cli.CopyToContainer(context.Background(), containerID, "/home/user/.ssh/", readBuf,types.CopyToContainerOptions{})
 	if check!=nil{
 		return "","",500
 	}
@@ -314,16 +429,19 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 //Gives information about the containers that user holds
 func OwnedContainerInfo(ctx context.Context,username string)([]string,int){
 
-	documentData,err := get_document(ctx,username)
+	documentData,err := get_document(context.TODO(),username)
 	if err!=200{
 		return nil,err
 	}
 	var containerArray []string
-	for k, _ := range documentData["containerInfo"].(map[string]interface{}) { 
+	fmt.Println(username)
+	for k, dsf := range documentData.ContainerInfo {
+		fmt.Println(k,dsf) 
 		containerArray= append(containerArray,k)
 		
 	}
-	
+
+		fmt.Println(containerArray)
 	return containerArray,200
 
 }

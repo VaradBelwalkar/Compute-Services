@@ -54,14 +54,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 		//Handle JWT signing and header creation 
 		token,err:=SignHandler(username)
-		if err!=nil{
+		if err!=nil{ 	
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		tokenString := "Bearer "+token
 		w.Header().Set("Authorization",tokenString)
 		
-
         //setting cookie based session
 		CreateSession(w,username)
 		//redirectTarget = "/internal"
@@ -108,7 +107,6 @@ func Handle_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 		w.WriteHeader(http.StatusForbidden)
 		return false,""
 	}
-	
 	return true,username
 
 }
