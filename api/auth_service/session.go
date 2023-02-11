@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"math/rand"
 	"time"
+	"errors"
 )
 
 
@@ -93,13 +94,13 @@ func RetrieveSession(r *http.Request) (string,string,error){
 	// Get the session ID from the request
 	sessionID, err := r.Cookie("session")
 	if err != nil {
-		return "","",err
+		return "","",err // Here the error means cookie doesn't exist
 	}
 	// Get the session by ID
 	username, ok := Sessions[sessionID.Value]
 	if ok == false {
 			//If session doesn't exist do something here
-			return "","",nil
+			return "","",errors.New("errorHolder")
 	} else{
 		//Session exists, proceed with JWT authorization
 		return sessionID.Value,username,nil

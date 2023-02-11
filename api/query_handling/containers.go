@@ -5,7 +5,6 @@ import (
 	"context"
 	"net/http"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
@@ -39,12 +38,18 @@ func Container_Run(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 		}
+		if err==403{
+			w.WriteHeader(http.StatusForbidden) // Means no more than 5 containers are allowed
+			return
+		}
+		return
 	}
 
 	resp:=map[string]string{"privatekey":privateKey,"port":Port}
 	b, _ := json.Marshal(resp)
 	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
 	//Send reponse in the body
 
@@ -57,22 +62,25 @@ func Container_Resume(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
- 	ctx := context.Background()
 	//Extracting required string from the request Structure
 	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	privateKey,Port,err:=ca.ContainerStart(ctx,Cli,vars["container"],username)	
+	privateKey,Port,err:=ca.ContainerStart(context.TODO(),Cli,vars["container"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+		}else if err==404{
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
+		return
 	}
-	resp:=map[string]string{"privatkey":privateKey,"port":Port}
-	//resp:=responseStruct{privatekey:privateKey,port:Port}
+	resp:=map[string]string{"privatekey":privateKey,"port":Port}
 	b, _ := json.Marshal(resp)
-	json.NewEncoder(w).Encode(b)
+	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 
 	//Send reponse in the body
 
@@ -88,21 +96,20 @@ func Container_List(w http.ResponseWriter, r *http.Request) {
  	ctx := context.Background()
 	//Extracting required string from the request Structure
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	containerArray,err:=ca.OwnedContainerInfo(ctx,username)	
+	containerInfo,err:=ca.OwnedContainerInfo(ctx,username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 		}
+		return
 	}
-	fmt.Println("THIS IS Working")
-	fmt.Println(containerArray)
-	b, _ := json.Marshal(containerArray)
+	b, _ := json.Marshal(containerInfo)
 	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")
-
+	w.WriteHeader(http.StatusOK)
 	//Send reponse in the body
-
+	
 
 }
 
@@ -111,7 +118,6 @@ func Container_Stop(w http.ResponseWriter, r *http.Request) {
 	if check!=true{
 		return
 	}
-
  	ctx := context.Background()
 	//Extracting required string from the request Structure
 	vars := mux.Vars(r)
@@ -124,7 +130,9 @@ func Container_Stop(w http.ResponseWriter, r *http.Request) {
 		}
 		if err== 404{
 			w.WriteHeader(http.StatusNotFound)
+			return
 		}
+	return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -153,7 +161,9 @@ func Container_Remove(w http.ResponseWriter, r *http.Request) {
 		}
 		if err == 404{
 			w.WriteHeader(http.StatusNotFound)
+			return
 		}
+		return
 	}
 	
 	w.WriteHeader(http.StatusOK)

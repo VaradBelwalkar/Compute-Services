@@ -73,8 +73,6 @@ func main() {
 	router.HandleFunc("/container/stop/{container}", qh.Container_Stop).Methods("GET")
 	router.HandleFunc("/container/remove/{container}", qh.Container_Remove).Methods("GET")
 	router.HandleFunc("/container/list/containers", qh.Container_List).Methods("GET")
-	router.HandleFunc("/upload_file/", qh.Upload_file)			//yet to be determined
-	router.HandleFunc("/upload_folder/", qh.Upload_folder)		//yet to be determined
     router.HandleFunc("/register",as.RenderForm).Methods("GET")	   	//DONE
 	router.HandleFunc("/register",qh.RegisterUser).Methods("POST")     //DONE
 	router.HandleFunc("/remove_account",as.RenderForm).Methods("GET")	//DONE

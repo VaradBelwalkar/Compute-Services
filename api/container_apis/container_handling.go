@@ -4,12 +4,9 @@ import (
 	"context"
 	"io/ioutil"
 	"strings"
-	"time"
-	"fmt"
 	"bytes"
 	"archive/tar"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/docker/api/types/container"
@@ -66,15 +63,9 @@ func get_document(ctx context.Context,username string)(resultStruct, int){
 	//document_handler of type *SingleResult, see github code for more details
 	err := db.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
 	//If not then use following	
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return resultStruct{},404
-		} else {
-			return resultStruct{},500
-		}
+	if err != nil {		
+			return resultStruct{},500	// Internal server error
 	}	
-		fmt.Println(documentData)
-		fmt.Println(documentData.TotalOwnedContainers)
 return documentData,200
 
 }
@@ -92,7 +83,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	totalOwnedContainers := documentData.TotalOwnedContainers
 	
 		if totalOwnedContainers>=5 {
-			return "","",406		// http.StatusNotAcceptable
+			return "","",403		// http.StatusForbidden  //This is because system cannot allocate more than 5 containers per user
 		}
 	
 	//Else do allocate the container	
@@ -107,34 +98,24 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 			//nat.Port("443/tcp"): {},
 			nat.Port("22/tcp"): {},
 		},
-	}
-	
+	}	
+	volumeBinding:=username+":/mnt:rw"
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
 			//nat.Port("443/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "443"}},
 			nat.Port("22/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0"}}, //Here excluding HostPort to assign a random port 
 		},
+		Binds: []string{volumeBinding},
 	}
 	
     resp, err := cli.ContainerCreate(ctx,containerCfg,hostConfig,nil,nil,"")
     if err != nil {
-		fmt.Println(err)
         return "","",500
     }
 
     if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
         return "","",500
     }
-
-
-	//statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-    //select {
-    //case err := <-errCh:
-    //    if err != nil {
-    //      return "","",500
-    //    }
-    //case <-statusCh:
-    //}
 	
 	privateKey,publicKey,check:= MakeSSHKeyPair()
 	if check!=200 {
@@ -170,29 +151,23 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 
 	t, err := ioutil.ReadAll(r)
 	if err != nil {
-
 		return "","",500
 	}
 	tempString:=string(t)
 	readBuf := strings.NewReader(tempString)
 	err =cli.CopyToContainer(context.Background(), resp.ID, "/root/.ssh/",readBuf ,types.CopyToContainerOptions{})
 	if err!=nil{
-		fmt.Println(err)
-		
 		return "","",500
 	}
 	
 	// Handle db call to store the resp.ID into the appropriate row for the user
 	containerJSON,err:=cli.ContainerInspect(ctx,resp.ID)
-	if err!=nil{
-		
+	if err!=nil{		
 	return "","",500
 	}
 
 	port:=containerJSON.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
-	fmt.Println(port)
 	containerName:=username+"_"+port
-	fmt.Println(containerName)
 	// Here count is updated but not container information, hence do update that
 	//opts := options.Update().SetUpsert(true)
 	//fmt.Println(opts)
@@ -207,7 +182,6 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 
 	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
-		fmt.Println(err)
 		return "","",500
 	}
 return privateKey,port,200
@@ -230,33 +204,22 @@ func ContainerStop(ctx context.Context,cli *client.Client,containerName string,u
 
 	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]string)["containerID"]
+		containerID=nesting2.(map[string]interface{})["containerID"].(string)
 	} else{
 		return 404 // Send StatusNotFound
 	}
 
-	var CHANGE time.Duration = 1029
-    if err := cli.ContainerStop(ctx,containerID,&CHANGE); err != nil {
+	stopOpts:=container.StopOptions{}
+    if err := cli.ContainerStop(context.TODO(),containerID,stopOpts); err != nil {
         return 500
     }
-
-    statusCh, errCh := cli.ContainerWait(ctx, containerID, container.WaitConditionNotRunning)
-    select {
-    case err := <-errCh:
-        if err != nil {
-			return 500
-        }
-    case <-statusCh:
-    }
-
-	//DO APPROPRIATE CHANGES HERE
 
 	filter:=bson.M{
 		"username":username,
 	}
-	update:=bson.M{
-		"containerInfo."+containerName:bson.M{"status":"stopped"},
-	}
+	update:=bson.M{ "$set":bson.M{
+		"containerInfo."+containerName+"."+"status":"stopped",
+	}}
 
 	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
@@ -275,53 +238,42 @@ func ContainerRemove(ctx context.Context,cli *client.Client,containerName string
 	//var documentData map[string]interface{} 
 	//Make db call to retrieve user info about the containers it holds
 	//var err error
-	documentData,err := get_document(ctx,username)
+	documentData,err := get_document(context.TODO(),username)
 	if err!=200{
 		return err
 	}
-
+	totalOwnedContainers:=documentData.TotalOwnedContainers
 	var containerID string
 
 	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]string)["containerID"]
+		containerID=nesting2.(map[string]interface{})["containerID"].(string)
 	} else{
 		return 404 // Send StatusNotFound
 	}
 
-	var options types.ContainerRemoveOptions
+	options:=types.ContainerRemoveOptions{Force:true}
 
-    if err := cli.ContainerRemove(ctx, containerID,options); err != nil {
+    if err := cli.ContainerRemove(context.TODO(), containerID,options); err != nil {
         return 500
     }
 
-    statusCh, errCh := cli.ContainerWait(ctx, containerID, container.WaitConditionNotRunning)
-    select {
-    case err := <-errCh:
-        if err != nil {
-            return 500
-        }
-    case <-statusCh:
-    }
-
 	filter:=bson.M{
-		"username":username,
+		"username":username,	
 	}
-	update:=bson.M{
-		"containerInfo":bson.M{"$unset":bson.M{containerName:"",}},
-	}
+	update:=bson.M{ "$unset":bson.M{
+		"containerInfo."+containerName:"",
+	},
+	"$set":bson.M{"totalOwnedContainers":totalOwnedContainers-1},
+
+}
 	updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if check!=nil || updateResult.MatchedCount!=1{
 		return 500
-	}	
-	
+	}		
 	return 200
 
 }
-
-
-
-
 
 
 
@@ -340,23 +292,26 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 
 	nesting1:=documentData.ContainerInfo//[containerName].(map[string]interface{})["containerID"].(string)
 	if nesting2,ok:= nesting1[containerName]; ok{
-		containerID=nesting2.(map[string]string)["containerID"]
+		containerID=nesting2.(map[string]interface{})["containerID"].(string)
 	} else{
 		return "","",404 // Send StatusNotFound
 	}
 	// If returns error if container is already running, first do inspect the container and then only run
+
+
+
+	containerINFO, errCase := cli.ContainerInspect(context.Background(), containerID)
+	if errCase != nil {
+		return "","",500
+	}
+	var oldPort string
+	if containerINFO.State.Running == false{
     if err := cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
         return "","",500
     }
-
-    statusCh, errCh := cli.ContainerWait(ctx, "id", container.WaitConditionNotRunning)
-    select {
-    case err := <-errCh:
-        if err != nil {
-          return "","",500
-        }
-    case <-statusCh:
-    }
+} else {
+	oldPort=containerINFO.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
+}
 
 	privateKey,publicKey,err:= MakeSSHKeyPair()
 	if err!=200 {
@@ -376,15 +331,12 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 		Size: int64(len(str)),
 	}
 	if err := tw.WriteHeader(hdr); err != nil {
-		fmt.Println(err)
 		return "","",500
 	}
 	if _, err := tw.Write(str); err != nil {
-		fmt.Println(err)
 		return "","",500
 	}
 	if err := tw.Close(); err != nil {
-		fmt.Println(err)
 		return "","",500
 	}
 	
@@ -392,17 +344,16 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 
 	t, errInfo := ioutil.ReadAll(r)
 	if errInfo != nil {
-		fmt.Println(err)
 		return "","",500
 	}
 	tempString:=string(t)
 	readBuf := strings.NewReader(tempString)
-	check :=cli.CopyToContainer(context.Background(), containerID, "/home/user/.ssh/", readBuf,types.CopyToContainerOptions{})
+	check :=cli.CopyToContainer(context.Background(), containerID, "/root/.ssh/", readBuf,types.CopyToContainerOptions{})
 	if check!=nil{
 		return "","",500
 	}
-
-	containerJSON,check:=cli.ContainerInspect(ctx,containerID)
+	if containerINFO.State.Running == false{
+	containerJSON,check:=cli.ContainerInspect(context.TODO(),containerID)
 	if check!=nil{
 	return "","",500
 	}
@@ -413,36 +364,38 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 	filter:=bson.M{
 		"username":username,
 	}
-	update:=bson.M{
-		"containerInfo":bson.M{"$unset":bson.M{containerName:"",},"$set":bson.M{newContainerName:bson.M{"containerID":containerID,"port":port,"status":"running"},}},
-		
+	update:=bson.M{ "$unset":bson.M{
+		"containerInfo."+containerName:"",
+	},
+	"$set":bson.M{
+		"containerInfo."+newContainerName:bson.M{"containerID":containerID,"port":port,"status":"running"},
+	},
 	}
 	updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if check!=nil || updateResult.MatchedCount!=1{
 		return "","",500
 	}
-
+	
 	return privateKey,port,200
+	
+	}else{
+		return privateKey,oldPort,200
+	}
 
 }
 
 //Gives information about the containers that user holds
-func OwnedContainerInfo(ctx context.Context,username string)([]string,int){
+func OwnedContainerInfo(ctx context.Context,username string)(map[string]string,int){
 
 	documentData,err := get_document(context.TODO(),username)
 	if err!=200{
 		return nil,err
 	}
-	var containerArray []string
-	fmt.Println(username)
-	for k, dsf := range documentData.ContainerInfo {
-		fmt.Println(k,dsf) 
-		containerArray= append(containerArray,k)
-		
+	containerMap:=make(map[string]string)
+	for k, v := range documentData.ContainerInfo {
+		containerMap[k]=v.(map[string]interface{})["status"].(string)
 	}
-
-		fmt.Println(containerArray)
-	return containerArray,200
+	return containerMap,200
 
 }
 

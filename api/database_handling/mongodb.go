@@ -13,8 +13,8 @@ import (
 type resultStruct struct{
 	Username string `bson:"username"`
 	Password string `bson:"password"`
-	totalOwnedContainers int `bson:"totalOwnedContainers"`
-	containerInfo map[string]interface{} `bson:"containerInfo"`
+	TotalOwnedContainers int `bson:"totalOwnedContainers"`
+	ContainerInfo map[string]interface{} `bson:"containerInfo"`
 }
 
 var CollectionHandler *mongo.Collection 
@@ -91,8 +91,7 @@ func Authenticate_user(username string,password string)(int){
 	result:=resultStruct{}
 
 	err := CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
-	if err == mongo.ErrNoDocuments {
-	
+	if err == mongo.ErrNoDocuments {	
 		return 404
 	} else if err != nil {
 		return 500
@@ -101,9 +100,11 @@ func Authenticate_user(username string,password string)(int){
 		// If a document with the specified username already exists, update it
 		if password == result.Password{
 			return 200
+		} else {
+			return 401
 		}
 	}
-return 404
+
 
 }
 

@@ -37,12 +37,12 @@ func verifyJWT(tokenString string) (jwt.MapClaims, int) {
 		return []byte(SigningKey), nil
 	})
 	if err != nil {
-		return nil, 404
+		return nil, 401
 	}
 	if token.Valid {
 		return claims, 200
 	}
-	return nil,404
+	return nil,401
 }
 
 

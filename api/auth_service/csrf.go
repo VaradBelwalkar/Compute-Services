@@ -40,7 +40,6 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 	// Generate a CSRF token
 	csrfToken, err := generateCSRFToken()
 	if err != nil {
-		fmt.Println("sdlfkjldskj")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}	
@@ -54,13 +53,14 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 	// Render the form
 	tmpl, err := template.New("form").Parse(csrfTemplate)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	//tmpl object expects object  of type map[string]string to update values in the provided form tempate
 	data := map[string]string{
 		"csrf": csrfToken,
 	}
+	w.WriteHeader(http.StatusOK)
 	//Here The Execute command is first updating the form with data object  i.e updating the fields the tmpl can 
 	//understand i.e {{.csrf}} field and then updating their values and sending the template to frontend
 	if err := tmpl.Execute(w, data); err != nil {
@@ -74,7 +74,7 @@ func RenderForm(w http.ResponseWriter, r *http.Request) {
 func HandleSubmit(w http.ResponseWriter, r *http.Request) bool {
 	// Check the request method
 	if r.Method != http.MethodPost {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)   // 405
 		return false
 	}
 
@@ -84,14 +84,13 @@ func HandleSubmit(w http.ResponseWriter, r *http.Request) bool {
 	// Get the CSRF token from the user's session
 	sessionCSRFToken, err := r.Cookie("csrftoken")
 	if err != nil {
-		fmt.Println("dsfkj")
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)   // 400
 		return false
 	}
 
 	// Compare the CSRF tokens
 	if csrfToken != sessionCSRFToken.Value {
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusPreconditionFailed)   // 412 precondition i.e csrf is failed
 		return false
 	}
 	//Returns boolean value whether user is credible or not

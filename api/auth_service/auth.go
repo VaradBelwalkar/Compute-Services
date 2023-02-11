@@ -39,15 +39,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	pass := r.FormValue("password")
 
 	if username == "" || pass == ""{
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest) // 400 
 	} else {
 		// .. check credentials against db entry
         check:=db.Authenticate_user(username,pass)
 		if check !=200{
 			if check == 500{
 				w.WriteHeader(http.StatusInternalServerError)
+				return
 			} else if check == 404{
 				w.WriteHeader(http.StatusNotFound)
+				return
+			} else if check == 401{
+				w.WriteHeader(http.StatusUnauthorized)
+				return
 			}
 			return
 		}
@@ -73,20 +78,27 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	sessionID,session_username,err:= RetrieveSession(r)
 	if err!=nil || session_username == ""{
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	username,status:=VerifyHandler(r)
 	if status!=200 || username == ""{
-		w.WriteHeader(http.StatusForbidden)
-		return
+		if status == 401{
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		} else if status == 500{
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 	if session_username!=username{
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized) // 401
 		return
 	}
 
 	DeleteSession(sessionID)
+
+	w.WriteHeader(http.StatusOK)
 	//http.Redirect(response, request, "/", 302)
 }
 
@@ -95,16 +107,16 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func Handle_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 	_,session_username,err:= RetrieveSession(r)
 	if err!=nil || session_username == ""{
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}
 	username,status:=VerifyHandler(r)
 	if status!=200 || username == ""{	
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}
 	if session_username!=username{
-		w.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}
 	return true,username
