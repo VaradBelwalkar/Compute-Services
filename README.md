@@ -1,4 +1,4 @@
-What it provides?\ 
+What it provides?\
 1.) Quick on-demand containers and provisioning\
 2.) Stronger Authentication mechanism
 3.) Storage mechanism via docker volumes
