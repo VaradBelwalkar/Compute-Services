@@ -1,8 +1,8 @@
 What it provides?\
 1.) Quick on-demand containers and provisioning\
-2.) Stronger Authentication mechanism
-3.) Storage mechanism via docker volumes
-4.) Suitable for large scale deployments (Currently single node)
+2.) Stronger Authentication mechanism\
+3.) Storage mechanism via docker volumes\
+4.) Suitable for large scale deployments (Currently single node)\
 5.) More features coming soon...
 
       Following one shows some features:
