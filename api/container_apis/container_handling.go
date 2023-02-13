@@ -79,6 +79,9 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	}
 	//Here we get the document to work with
 
+	if imageName !="some_ubuntu"{
+		return "","",404
+	}
 	
 	totalOwnedContainers := documentData.TotalOwnedContainers
 	

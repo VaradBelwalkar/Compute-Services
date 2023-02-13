@@ -41,6 +41,10 @@ func Container_Run(w http.ResponseWriter, r *http.Request) {
 		if err==403{
 			w.WriteHeader(http.StatusForbidden) // Means no more than 5 containers are allowed
 			return
+		} 
+		if err == 404{
+			w.WriteHeader(http.StatusNotFound)
+			return
 		}
 		return
 	}
