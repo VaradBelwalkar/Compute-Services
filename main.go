@@ -61,6 +61,7 @@ func main() {
 
 	//Get handler for the "user_details" collection (creates collection if not exists)
     db.CollectionHandler,db.Sys_CollectionHandler=db.InitiateMongoDB(mongo_client);
+	db.Redis_Client = db.Initiate_Redis()
     
     //login to be handled separatly
 
@@ -68,7 +69,10 @@ func main() {
 	router.HandleFunc("/login", as.LoginHandler).Methods("POST")		//DONE
 	router.HandleFunc("/login", as.RenderForm).Methods("GET")			//DONE
 	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
+	router.HandleFunc("/otphandler", as.RenderForm).Methods("GET")
+	router.HandleFunc("/otphandler", as.LogoutHandler).Methods("POST")
 	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("GET")
+	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("POST")
 	router.HandleFunc("/container/resume/{container}", qh.Container_Resume).Methods("GET")
 	router.HandleFunc("/container/stop/{container}", qh.Container_Stop).Methods("GET")
 	router.HandleFunc("/container/remove/{container}", qh.Container_Remove).Methods("GET")

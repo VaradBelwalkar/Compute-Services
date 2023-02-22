@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 	"errors"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 )
 
 
@@ -50,27 +51,36 @@ import (
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789")
 
-var Sessions map[string]string
-
 func generateSessionID(n int) string {
     b := make([]rune, n)
     for i := range b {
         b[i] = letters[rand.Intn(len(letters))]
     }
-	_, ok := Sessions[string(b)]
+	ok := db.Redis_Check_Key(string(b))
 	for ok==true{
 		for i := range b {
 			b[i] = letters[rand.Intn(len(letters))]
 		}
-		_, ok = Sessions[string(b)]
+		ok = db.Redis_Check_Key(string(b))
 	}
     return string(b)
 }
 
 
-// Save a session
-func saveSession(sessionID string,username string) {
-	Sessions[sessionID] = username
+// Save a session (only occurs when new session is going to be created)
+func saveSession(sessionID string,username string) error{
+	err:=db.Redis_Set_Value_With_Timeout(sessionID,username,1440)
+	if err!=true{
+		return errors.New("errorHolder")
+	}
+	val:=make(map[string]string)
+	val["Authentication"]="success"
+	val["JWT"]="issued"
+	err=db.Redis_Set_Value_With_Timeout(username,val,1440)
+	if err!=true{
+		return errors.New("errorHolder")
+	}
+	return nil	
 }
 
 
@@ -80,7 +90,11 @@ func CreateSession(w http.ResponseWriter,username string) {
 	rand.Seed(time.Now().UnixNano())
 	sessionID := generateSessionID(10)
 	// Save the session
-	saveSession(sessionID,username)
+	err:=saveSession(sessionID,username)
+	if err!=nil{
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	// Set the session ID as a cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:  "session",
@@ -88,6 +102,43 @@ func CreateSession(w http.ResponseWriter,username string) {
 	})
 	w.WriteHeader(http.StatusOK)
 }
+
+func saveTempSession(sessionID string,username string,OTP string)error{
+	err:=db.Redis_Set_Value_With_Timeout(sessionID,username,5)
+	if err!=true{
+		return errors.New("errorHolder")
+	}
+	val:=make(map[string]string)
+	val["Authentication"]="pending"
+	val["JWT"]="issued"
+	val["OTP"]=OTP
+	err=db.Redis_Set_Value_With_Timeout(username,val,5)
+	if err!=true{
+		return errors.New("errorHolder")
+	}
+	return nil	
+}
+
+func CreateTempSession(w http.ResponseWriter,username string,OTP string){
+		// Create a new session
+		rand.Seed(time.Now().UnixNano())
+		sessionID := generateSessionID(10)
+		// Save the session
+		err:=saveTempSession(sessionID,username,OTP)
+		if err!=nil{
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		// Set the session ID as a cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:  "session",
+			Value: sessionID,
+		})
+		w.WriteHeader(http.StatusOK)
+}
+
+
+
 
 // A handler function that retrieves a session by ID
 func RetrieveSession(r *http.Request) (string,string,error){
@@ -97,20 +148,23 @@ func RetrieveSession(r *http.Request) (string,string,error){
 		return "","",err // Here the error means cookie doesn't exist
 	}
 	// Get the session by ID
-	username, ok := Sessions[sessionID.Value]
-	if ok == false {
-			//If session doesn't exist do something here
-			return "","",errors.New("errorHolder")
-	} else{
-		//Session exists, proceed with JWT authorization
-		return sessionID.Value,username,nil
+
+	username:=db.Redis_Get_Value(sessionID.Value).(string)
+	if username == ""{
+		return "","",errors.New("errorHolder")
 	}
+
+	return sessionID.Value,username,nil
 
 }
 
 //To be called in Logout handler
-func DeleteSession(sessionID string){
-	delete(Sessions,sessionID)
+func DeleteSession(sessionID string) bool{
+	check:=db.Redis_Delete_key(sessionID)
+	if check!=true{
+		return false
+	}
+	return true
 }
 
 

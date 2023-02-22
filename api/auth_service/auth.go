@@ -25,7 +25,7 @@ func getUserName(request *http.Request) (userName string) {
 
 
 
-// login handler
+// login handlersession_username
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -57,6 +57,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		chk,OTP:=TwoFA_Send(username)
+		if chk!=true{
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		//Handle JWT signing and header creation 
 		token,err:=SignHandler(username)
 		if err!=nil{ 	
@@ -67,11 +72,66 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Authorization",tokenString)
 		
         //setting cookie based session
-		CreateSession(w,username)
+		CreateTempSession(w,username,OTP)
 		//redirectTarget = "/internal"
 	}
 	//http.Redirect(response, request, redirectTarget, 302)
 }
+
+
+//OTP Handler 
+
+// Don't need to check auth during GET for otphandler as the form request doesn't require it
+func OTPHandler(w http.ResponseWriter, r *http.Request){
+
+		//CSRF handling
+		check:=HandleSubmit(w,r)
+		if check!=true{
+			return
+		}
+		check,username:=Handle_auth(w,r)
+		if check!=true{
+			return
+		}
+
+	OTP := r.FormValue("otp")
+
+	if OTP == "" {
+		w.WriteHeader(http.StatusBadRequest) // 400 
+	} else {
+
+
+
+		chk:=TwoFA_Verify(username,OTP)					//Deletes the <username> temporary key when true
+		if chk!=true{
+			w.WriteHeader(http.StatusUnauthorized)			
+			return
+		}
+		sessionCSRFToken, err := r.Cookie("csrftoken")
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)   // 400
+			return 
+		}
+		db.Redis_Delete_key(sessionCSRFToken.Value)		//Deleting temporary session 
+		//Handle JWT signing and header creation 
+		token,err:=SignHandler(username)		
+		if err!=nil{ 	
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		tokenString := "Bearer "+token
+		w.Header().Set("Authorization",tokenString)
+		
+        //setting cookie based session
+		CreateSession(w,username)					//Creates new session valid for 24hrs
+		//redirectTarget = "/internal"
+	}
+	//http.Redirect(response, request, redirectTarget, 302)
+	
+}
+
+
+
 
 // logout handler
 

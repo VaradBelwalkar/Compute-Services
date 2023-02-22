@@ -17,6 +17,8 @@ const csrfTemplate = `
   <input type="text" id="name" name="name">
   <label for="password">Password</label>
   <input type="password" id="password" name="password">
+  <label for="otp">OTP</label>
+  <input type="text" id="otp" name="otp">
   <input type="hidden" name="csrf" value="{{.csrf}}">
   <input type="submit" value="Submit">
 </form>
