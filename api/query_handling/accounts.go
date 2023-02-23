@@ -31,6 +31,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	// Validate the form values
 	username := r.Form.Get("username")
 	password := r.Form.Get("password")
+	EMAIL:=r.Form.Get("email")
 
 	if username == "" || password == "" {
 		w.WriteHeader(http.StatusBadRequest) // Here status code is 400 something went wrong at your side!
@@ -55,7 +56,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	// Insert the new user into the database
-	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": password})
+	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": password,"email":EMAIL})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

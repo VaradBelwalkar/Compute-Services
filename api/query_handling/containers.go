@@ -25,7 +25,7 @@ type infoStruct struct{
 
   // HandlerFunc to be registered
 func Container_Run(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Handle_auth(w,r)
+	check,username:=as.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}
@@ -61,7 +61,7 @@ func Container_Run(w http.ResponseWriter, r *http.Request) {
 }
   
 func Container_Resume(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Handle_auth(w,r)
+	check,username:=as.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}
@@ -92,7 +92,7 @@ func Container_Resume(w http.ResponseWriter, r *http.Request) {
 }
   
 func Container_List(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Handle_auth(w,r)
+	check,username:=as.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}
@@ -118,7 +118,7 @@ func Container_List(w http.ResponseWriter, r *http.Request) {
 }
 
 func Container_Stop(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Handle_auth(w,r)
+	check,username:=as.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}
@@ -148,7 +148,7 @@ func Container_Stop(w http.ResponseWriter, r *http.Request) {
 
 
 func Container_Remove(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Handle_auth(w,r)
+	check,username:=as.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}

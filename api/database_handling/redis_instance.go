@@ -19,7 +19,7 @@ func Initiate_Redis() {
 
 
 //returns string
-func Redis_Get_Value(key string) interface{} {
+func Redis_Get_Value(key string) string {
     // create context
     ctx := context.Background()
 
@@ -32,7 +32,7 @@ func Redis_Get_Value(key string) interface{} {
 }
 
 
-func Redis_Set_Value(key string,value interface{}) bool{
+func Redis_Set_Value(key string,value string) bool{
     // create context
     ctx := context.Background()
 
@@ -52,7 +52,7 @@ func Redis_Set_Value(key string,value interface{}) bool{
 }
 
 // Use 5 minutes for OTP login 
-func Redis_Set_Value_With_Timeout(key string,value interface{},timeout int) bool{
+func Redis_Set_Value_With_Timeout(key string,value string,timeout int) bool{
     // create context
     ctx := context.Background()
 
@@ -95,8 +95,8 @@ func Redis_Delete_key(key string) bool{
 func Redis_Check_Key(key string) bool{
 	ctx := context.Background()
 	if check, _ := Redis_Client.Exists(ctx,key).Result(); check == 0 {
-		return true
-	} else {
 		return false
+	} else {
+		return true
 	}
 }

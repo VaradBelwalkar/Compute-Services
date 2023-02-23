@@ -3,6 +3,7 @@ package auth_service
 import (
 	"net/http"
 	"math/rand"
+	"encoding/json"
 	"time"
 	"errors"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
@@ -76,7 +77,11 @@ func saveSession(sessionID string,username string) error{
 	val:=make(map[string]string)
 	val["Authentication"]="success"
 	val["JWT"]="issued"
-	err=db.Redis_Set_Value_With_Timeout(username,val,1440)
+	jsonFormat, chk := json.Marshal(val)
+    if chk != nil {
+        return errors.New("errorHolder")
+    }
+	err=db.Redis_Set_Value_With_Timeout(username,string(jsonFormat),1440)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -112,7 +117,12 @@ func saveTempSession(sessionID string,username string,OTP string)error{
 	val["Authentication"]="pending"
 	val["JWT"]="issued"
 	val["OTP"]=OTP
-	err=db.Redis_Set_Value_With_Timeout(username,val,5)
+	jsonFormat, chk := json.Marshal(val)
+    if chk != nil {
+        return errors.New("errorHolder")
+    }
+
+	err=db.Redis_Set_Value_With_Timeout(username,string(jsonFormat),5)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -121,9 +131,9 @@ func saveTempSession(sessionID string,username string,OTP string)error{
 
 func CreateTempSession(w http.ResponseWriter,username string,OTP string){
 		// Create a new session
-		rand.Seed(time.Now().UnixNano())
 		sessionID := generateSessionID(10)
 		// Save the session
+
 		err:=saveTempSession(sessionID,username,OTP)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
@@ -135,13 +145,14 @@ func CreateTempSession(w http.ResponseWriter,username string,OTP string){
 			Value: sessionID,
 		})
 		w.WriteHeader(http.StatusOK)
+		return 
 }
 
 
 
 
 // A handler function that retrieves a session by ID
-func RetrieveSession(r *http.Request) (string,string,error){
+func RetrieveTempSession(r *http.Request) (string,string,error){
 	// Get the session ID from the request
 	sessionID, err := r.Cookie("session")
 	if err != nil {
@@ -149,7 +160,7 @@ func RetrieveSession(r *http.Request) (string,string,error){
 	}
 	// Get the session by ID
 
-	username:=db.Redis_Get_Value(sessionID.Value).(string)
+	username:=db.Redis_Get_Value(sessionID.Value)
 	if username == ""{
 		return "","",errors.New("errorHolder")
 	}
@@ -157,6 +168,35 @@ func RetrieveSession(r *http.Request) (string,string,error){
 	return sessionID.Value,username,nil
 
 }
+
+
+func RetrieveAuthorizedSession(r *http.Request) (string,string,bool,error){
+	// Get the session ID from the request
+	sessionID, err := r.Cookie("session")
+	if err != nil {
+		return "","",false,err // Here the error means cookie doesn't exist
+	}
+	// Get the session by ID
+
+	username:=db.Redis_Get_Value(sessionID.Value)
+	if username == ""{
+		return "","",false,errors.New("errorHolder")
+	}
+
+    UserInstance:=make(map[string]string)
+    jsonString:=db.Redis_Get_Value(username)
+    err = json.Unmarshal([]byte(jsonString), &UserInstance)
+    if err != nil {
+        return "","",false,nil
+    }
+	if UserInstance["Authentication"] == "success"{
+		return sessionID.Value,username,true,nil
+	}else{
+	return sessionID.Value,username,false,nil}
+
+}
+
+
 
 //To be called in Logout handler
 func DeleteSession(sessionID string) bool{
@@ -166,6 +206,14 @@ func DeleteSession(sessionID string) bool{
 	}
 	return true
 }
+
+
+
+
+
+
+
+
 
 
 //Explaination ->

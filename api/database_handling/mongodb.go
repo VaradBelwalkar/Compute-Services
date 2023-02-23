@@ -13,8 +13,9 @@ import (
 type resultStruct struct{
 	Username string `bson:"username"`
 	Password string `bson:"password"`
-	TotalOwnedContainers int `bson:"totalOwnedContainers"`
+    Email string `bson:"email"`
 	ContainerInfo map[string]interface{} `bson:"containerInfo"`
+	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
 }
 
 var CollectionHandler *mongo.Collection 

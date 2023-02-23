@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/smtp"
     "time"
+    "encoding/json"
 	"strconv"
     "math/rand"
     "go.mongodb.org/mongo-driver/bson"
@@ -62,13 +63,18 @@ func TwoFA_Send(username string)(bool,string) {
     port := "587"
     address := host + ":" + port 
 
-    subject := "Your OTP for Two-Factor Authentication"
-    body := "Dear User,\n\nYour OTP for two-factor authentication is: " + OTP + "\n\nPlease enter this otp in your app to complete the authentication process.\n\nBest regards,\nDYPLUG"
-    message := []byte(subject + body)                           //Don't use colon(:)
+	msg := []byte("To: "+toEmailAddress+"\r\n" +
+		"Subject: Your OTP for Two-Factor Authentication\n\n\r\n" +
+		"\r\n" +
+		"Dear User,\n\nYour OTP for two-factor authentication is: " + OTP + "\n\nPlease enter this otp in your app to complete the authentication process.\n\nBest regards,\nDYPLUG\r\n")
+
+    //subject := "Your OTP for Two-Factor Authentication\n\n"
+    //body := "Dear User,\n\nYour OTP for two-factor authentication is: " + OTP + "\n\nPlease enter this otp in your app to complete the authentication process.\n\nBest regards,\nDYPLUG"
+    //message := []byte(subject + body)                           //Don't use colon(:)
 
     auth := smtp.PlainAuth("", from, password, host)
 
-    err := smtp.SendMail(address, auth, from, to, message)
+    err := smtp.SendMail(address, auth, from, to, msg)
     if err != nil {
         return false,""
     }
@@ -77,8 +83,13 @@ return true,OTP
 
 
 func TwoFA_Verify(username string, SentOTP string) bool{
-    UserInstance:=(db.Redis_Get_Value(username)).(map[string]interface{})
-    StoredOTP:=UserInstance["OTP"].(string)
+    UserInstance:=make(map[string]string)
+    jsonString:=db.Redis_Get_Value(username)
+    err := json.Unmarshal([]byte(jsonString), &UserInstance)
+    if err != nil {
+        return false
+    }
+    StoredOTP:=UserInstance["OTP"]
     if StoredOTP == "" || SentOTP == ""{
         return false
     }

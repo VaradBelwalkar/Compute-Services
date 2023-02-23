@@ -1,6 +1,7 @@
 package auth_service
 import(
 	"net/http"
+	"fmt"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 	"github.com/gorilla/securecookie"
 )
@@ -73,6 +74,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		
         //setting cookie based session
 		CreateTempSession(w,username,OTP)
+		return
 		//redirectTarget = "/internal"
 	}
 	//http.Redirect(response, request, redirectTarget, 302)
@@ -89,11 +91,11 @@ func OTPHandler(w http.ResponseWriter, r *http.Request){
 		if check!=true{
 			return
 		}
-		check,username:=Handle_auth(w,r)
+		check,username:=Temp_auth(w,r)
 		if check!=true{
 			return
 		}
-
+	
 	OTP := r.FormValue("otp")
 
 	if OTP == "" {
@@ -107,12 +109,6 @@ func OTPHandler(w http.ResponseWriter, r *http.Request){
 			w.WriteHeader(http.StatusUnauthorized)			
 			return
 		}
-		sessionCSRFToken, err := r.Cookie("csrftoken")
-		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)   // 400
-			return 
-		}
-		db.Redis_Delete_key(sessionCSRFToken.Value)		//Deleting temporary session 
 		//Handle JWT signing and header creation 
 		token,err:=SignHandler(username)		
 		if err!=nil{ 	
@@ -136,8 +132,8 @@ func OTPHandler(w http.ResponseWriter, r *http.Request){
 // logout handler
 
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	sessionID,session_username,err:= RetrieveSession(r)
-	if err!=nil || session_username == ""{
+	sessionID,session_username,chk,err:= RetrieveAuthorizedSession(r)
+	if err!=nil || session_username == "" || chk!=true{
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -164,8 +160,8 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 
 
-func Handle_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
-	_,session_username,err:= RetrieveSession(r)
+func Temp_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
+	_,session_username,err:= RetrieveTempSession(r)
 	if err!=nil || session_username == ""{
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
@@ -181,4 +177,26 @@ func Handle_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 	}
 	return true,username
 
+}
+
+
+
+func Verify_Auth(w http.ResponseWriter, r *http.Request)(bool,string){
+	_,session_username,chk,err:= RetrieveAuthorizedSession(r)
+	if err!=nil || session_username == "" || chk!=true{
+		fmt.Println("YYYYYYYYYYYYYYYYYYYY")
+		fmt.Println(chk)
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	username,status:=VerifyHandler(r)
+	if status!=200 || username == ""{	
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	if session_username!=username{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	return true,username
 }

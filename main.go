@@ -27,7 +27,6 @@ const url = "mongodb://localhost:27017/"
 // The main function manages all the query handling and manages the database as well
 func main() {
 
-	as.Sessions=make(map[string]string)
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
 			log.Fatal(err)
@@ -61,7 +60,7 @@ func main() {
 
 	//Get handler for the "user_details" collection (creates collection if not exists)
     db.CollectionHandler,db.Sys_CollectionHandler=db.InitiateMongoDB(mongo_client);
-	db.Redis_Client = db.Initiate_Redis()
+	db.Initiate_Redis()
     
     //login to be handled separatly
 
@@ -70,7 +69,7 @@ func main() {
 	router.HandleFunc("/login", as.RenderForm).Methods("GET")			//DONE
 	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
 	router.HandleFunc("/otphandler", as.RenderForm).Methods("GET")
-	router.HandleFunc("/otphandler", as.LogoutHandler).Methods("POST")
+	router.HandleFunc("/otphandler", as.OTPHandler).Methods("POST")
 	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("GET")
 	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("POST")
 	router.HandleFunc("/container/resume/{container}", qh.Container_Resume).Methods("GET")

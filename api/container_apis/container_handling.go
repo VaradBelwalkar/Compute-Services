@@ -22,6 +22,7 @@ import (
 type resultStruct struct{
 	Username string `bson:"username"`
 	Password string `bson:"password"`
+    Email string `bson:"email"`
 	ContainerInfo map[string]interface{} `bson:"containerInfo"`
 	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
 }
