@@ -1,7 +1,6 @@
 package auth_service
 import(
 	"net/http"
-	"fmt"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 	"github.com/gorilla/securecookie"
 )
@@ -58,7 +57,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		chk,OTP:=TwoFA_Send(username)
+		chk,OTP:=TwoFA_Send(username,"")
 		if chk!=true{
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -180,12 +179,30 @@ func Temp_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 }
 
 
+func Temp_Reg_auth(w http.ResponseWriter, r *http.Request) (bool,string,string,string) {
+	_,session_username,password,email,err:= RetrieveRegTempSession(r)
+	if err!=nil || session_username == ""{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"","",""
+	}
+	username,status:=VerifyHandler(r)
+	if status!=200 || username == ""{	
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"","",""
+	}
+	if session_username!=username{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"","",""
+	}
+	return true,username,password,email
+
+}
+
+
 
 func Verify_Auth(w http.ResponseWriter, r *http.Request)(bool,string){
 	_,session_username,chk,err:= RetrieveAuthorizedSession(r)
 	if err!=nil || session_username == "" || chk!=true{
-		fmt.Println("YYYYYYYYYYYYYYYYYYYY")
-		fmt.Println(chk)
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}

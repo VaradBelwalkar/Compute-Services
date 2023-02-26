@@ -5,6 +5,7 @@ import (
 	"net/smtp"
     "time"
     "encoding/json"
+    "fmt"
 	"strconv"
     "math/rand"
     "go.mongodb.org/mongo-driver/bson"
@@ -45,17 +46,17 @@ func RetrieveEmail(username string) string{
 
 
 
-func TwoFA_Send(username string)(bool,string) {
+func TwoFA_Send(username string,eMail string)(bool,string) {
     OTP:=Generate_OTP()
- 
-    eMail:=RetrieveEmail(username)
+    if eMail == ""{
+    eMail=RetrieveEmail(username)
     if eMail == ""{
         return false,""
     }
-
+}
     from := "officialdyplug@gmail.com"
-    password := "aaebyceatstahlfx" //Change to get from the env
-
+    password := "oskpnzbzxwzkvpmu" //Change to get from the env
+    fmt.Println(eMail)
     toEmailAddress := eMail //Should be dynamic generated format
     to := []string{toEmailAddress}
 
@@ -76,6 +77,8 @@ func TwoFA_Send(username string)(bool,string) {
 
     err := smtp.SendMail(address, auth, from, to, msg)
     if err != nil {
+        fmt.Println(err)
+        fmt.Println("XXXXXXXXXXXXXXXXXXX")
         return false,""
     }
 return true,OTP

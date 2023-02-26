@@ -3,19 +3,23 @@ package database_handling
 import (
 	"time"
 	"context"
+    //"os"
 	"github.com/go-redis/redis/v8"
 )
-
-var  Redis_Client *redis.Client
-
+var(
+    Redis_Client *redis.Client
+    Redis_URL string
+    Redis_Password string 
+)
 func Initiate_Redis() {
+   // redisPassword := os.Getenv("redis_password")
 	Redis_Client = redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",					//Also get this from env 
-		Password: "",							//Get password from env variable
+		Addr: Redis_URL,					
+		Password: Redis_Password,							
 		DB: 0,
 	})
 
-}
+}   
 
 
 //returns string

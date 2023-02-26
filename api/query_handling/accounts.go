@@ -3,6 +3,8 @@ package query_handling
 import (
 
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
@@ -10,6 +12,41 @@ import (
 	"github.com/docker/docker/api/types/volume"
 )
 // Here the user will be authenticated first and then request will be fulfilled
+
+type Config struct {
+	Emails []string `json:"emails"`
+}
+
+func isAllowed(email string) bool{
+		// read the config file
+		data, err := ioutil.ReadFile("config.json")
+		if err != nil {
+			return false
+		}
+	
+		// unmarshal the JSON data into a Config struct
+		var config Config
+		if err := json.Unmarshal(data, &config); err != nil {
+			return false
+		}
+	
+		found := false
+		for _, e := range config.Emails {
+			if e == email {
+				found = true
+				break
+			}
+		}
+	
+		if found {
+			return true
+		} else {
+			return false
+		}
+}
+
+
+
 
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -33,39 +70,105 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	password := r.Form.Get("password")
 	EMAIL:=r.Form.Get("email")
 
+	chk:=isAllowed(EMAIL)
+	if chk !=true{
+		w.WriteHeader(http.StatusFailedDependency) // 424 Statuscode
+		return
+	}
+
 	if username == "" || password == "" {
 		w.WriteHeader(http.StatusBadRequest) // Here status code is 400 something went wrong at your side!
 		return
 	}
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
+	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"email": EMAIL}).Decode(&result)	//Cannot create account if email exists
 	if err == nil {
-		w.WriteHeader( http.StatusConflict)  //409 statuscode
+		w.WriteHeader( http.StatusNotAcceptable)  //406 statuscode
 		return
 	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
-		
-		volumeOpts:=volume.CreateOptions{
-			Name:username,
-			Driver:"local",
-		}
-		
-		_,err:=Cli.VolumeCreate(context.TODO(),volumeOpts)
-		if err!=nil{
-			w.WriteHeader(http.StatusInternalServerError)
+
+		err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result) //Check for username conflicts
+		if err == nil {
+			w.WriteHeader( http.StatusConflict)  //409 statuscode
 			return
-		}
-	// Insert the new user into the database
-	_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": password,"email":EMAIL})
-	if err != nil {
+		} else{	
+
+			chk,OTP:=as.TwoFA_Send(username,EMAIL)
+			if chk!=true{
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			//Handle JWT signing and header creation 
+			token,err:=as.SignHandler(username)
+			if err!=nil{ 	
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+			tokenString := "Bearer "+token
+			w.Header().Set("Authorization",tokenString)
+			
+			//setting cookie based session
+			as.CreateRegTempSession(w,username,password,EMAIL,OTP)
+			return
+ 
+ 		}
+}
+}
+
+
+func VerifyRegisterUser(w http.ResponseWriter, r *http.Request){
+
+			//CSRF handling
+			check:=as.HandleSubmit(w,r)
+			if check!=true{
+				return
+			}
+			check,username,password,EMAIL:=as.Temp_Reg_auth(w,r)
+			if check!=true{
+				return
+			}
+		
+		OTP := r.FormValue("otp")
+	
+		if OTP == "" {
+			w.WriteHeader(http.StatusBadRequest) // 400 
+		} else {
+	
+	
+	
+			chk:=as.TwoFA_Verify(username,OTP)					//Deletes the <username> temporary key when true
+			if chk!=true{
+				w.WriteHeader(http.StatusUnauthorized)			
+				return
+			}
+
+	volumeOpts:=volume.CreateOptions{
+		Name:username,
+		Driver:"local",
+	}
+
+	_,err:=Cli.VolumeCreate(context.TODO(),volumeOpts)
+	if err!=nil{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+// Insert the new user into the database
+	hashedPassword:=db.ComputeHash(password)
+_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": hashedPassword,"email":EMAIL})
+if err != nil {
+	w.WriteHeader(http.StatusInternalServerError)
+	return
+}
 
-	// Return a success response
-	w.WriteHeader(http.StatusOK)  
+// Return a success response
+w.WriteHeader(http.StatusOK)
 }
+
 }
+
+
+
 
 // Parse and authenticate the user and then remove the account from the database
 func RemoveAccount(w http.ResponseWriter, r *http.Request) {

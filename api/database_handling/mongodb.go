@@ -4,15 +4,21 @@ import (
 	"context"
 	"log"
 	"fmt"
+	"crypto/hmac"
+    "crypto/sha256"
+	"crypto/subtle"
+    "encoding/hex"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-	
+
+var PassHashKey string
+
 //Global Objects 
 type resultStruct struct{
 	Username string `bson:"username"`
-	Password string `bson:"password"`
+	Password string `bson:"password"`					// In the hash format
     Email string `bson:"email"`
 	ContainerInfo map[string]interface{} `bson:"containerInfo"`
 	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
@@ -84,6 +90,18 @@ return db.Collection("user_details"),db.Collection("system_details")
 	
 }
 
+func ComputeHash(password string) string {
+    key := []byte(PassHashKey)
+    h := hmac.New(sha256.New, key)
+    h.Write([]byte(password))
+    hash := hex.EncodeToString(h.Sum(nil))
+    return hash
+}
+
+func compareHashAndPassword(hash, password string) bool {
+    expectedHash := ComputeHash(password)
+    return subtle.ConstantTimeCompare([]byte(hash), []byte(expectedHash)) == 1
+}
 
 //Authenticate user against DB entry
 //Returns appropriate statusCodes
@@ -97,13 +115,13 @@ func Authenticate_user(username string,password string)(int){
 	} else if err != nil {
 		return 500
 	} else {
-
-		// If a document with the specified username already exists, update it
-		if password == result.Password{
+		chk:=compareHashAndPassword(result.Password,password)
+		if chk==true{
 			return 200
-		} else {
+		}else{
 			return 401
 		}
+		// If a document with the specified username already exists, update it
 	}
 
 

@@ -9,17 +9,14 @@ import (
 )
 
 
-const (
-    SigningKey = "DFSD,asdlfkjFSDFJRWFKDvkdlsLKjsde5tToDogge"
-)
-
+var JWTSigningKey string
 
 // Sign a JWT using the HS256 algorithm
 // Generate the claims and pass them over here (claims like username(must) etc)
 func signJWT(claims jwt.MapClaims) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	
-	tokenString,err:=token.SignedString([]byte(SigningKey))
+	tokenString,err:=token.SignedString([]byte(JWTSigningKey))
 	if err!=nil{
 		return "",err
 	}
@@ -34,7 +31,7 @@ func verifyJWT(tokenString string) (jwt.MapClaims, int) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		return []byte(SigningKey), nil
+		return []byte(JWTSigningKey), nil
 	})
 	if err != nil {
 		return nil, 401

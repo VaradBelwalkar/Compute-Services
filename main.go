@@ -5,9 +5,8 @@ import (
 	"log"
 	"github.com/gorilla/mux"
 	"net/http"
-	"fmt"
 	"os"
-	"path/filepath"
+	"github.com/joho/godotenv"
     db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
     qh "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
@@ -21,26 +20,34 @@ import (
 
 //const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
-const url = "mongodb://localhost:27017/"
+var mongoURL string
+
+func Setup_Env(){
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	mongoURL = os.Getenv("MONGODB_URI")
+	db.Redis_URL = os.Getenv("REDIS_URL")
+    db.Redis_Password = os.Getenv("REDIS_PASSWORD")
+	db.PassHashKey = os.Getenv("PASSWORD_HASH_SECRET")
+	as.JWTSigningKey = os.Getenv("JWT_SECRET")
+}
 
 
 // The main function manages all the query handling and manages the database as well
 func main() {
-
-	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-			log.Fatal(err)
-	}
-
-	fmt.Println(dir)
+    
+	Setup_Env()
     // server main method
 
     var router = mux.NewRouter()
 
     //Initiate Mongo client
-	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(url)) 
+	mongo_client, err := mongo.NewClient(options.Client().ApplyURI(mongoURL)) 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Please start MongoDB")
 	}
 	ctx := context.Background()
 	err = mongo_client.Connect(ctx)
@@ -54,7 +61,7 @@ func main() {
     // Initiate Docker client
     qh.Cli, err = client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
     if err != nil {
-       panic(err)
+       panic("Failed to create Docker Client, ensure that Docker Daemon is running\n")
     }
     defer qh.Cli.Close()
 
@@ -78,6 +85,7 @@ func main() {
 	router.HandleFunc("/container/list/containers", qh.Container_List).Methods("GET")
     router.HandleFunc("/register",as.RenderForm).Methods("GET")	   	//DONE
 	router.HandleFunc("/register",qh.RegisterUser).Methods("POST")     //DONE
+	router.HandleFunc("/regotphandler",qh.VerifyRegisterUser).Methods("POST") 
 	router.HandleFunc("/remove_account",as.RenderForm).Methods("GET")	//DONE
 	router.HandleFunc("/remove_account",qh.RemoveAccount).Methods("POST")  //DONE
 
