@@ -1,0 +1,31 @@
+Create Password for Redis:
+    Setup the Redis password by first locating /etc/redis/redis.conf file, then,
+
+    Uncomment this line "# requirepass foobared"
+
+    And make it to "requirepass <your_super_secure_password>"
+
+
+
+Create Password for MongoDB:
+    First log into MongoDB by running client i.e mongosh
+    Then switch to Admin Database ->    use private_cloud
+
+    Create administrator user -> db.createUser({user: "root", pwd: "password", roles: [{role: "userAdminAnyDatabase", db: "admin"}]})
+
+    Then update configuration file for MongoDB
+            -> sudo nano /etc/mongod.conf
+
+    CHANGE      
+                 security:                  OR       #security:
+                 authorization: "disabled"
+
+    TO THIS
+
+    security:
+    authorization: "enabled"
+
+
+    Then restart the mongod server 
+            ->  sudo systemctl restart  mongod (for normal OS)
+            -> sudo service mongod restart
