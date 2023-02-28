@@ -1,0 +1,55 @@
+
+
+
+User document structure in MongoDB
+
+
+documentData
+
+{
+    _id: ObjectId("63ea00b8159503bf3210556d"),
+    username: 'temp',
+    password: 'temp',
+    email: "someemail@mail.com",
+    containerInfo: {
+      temp_49153: {
+        containerID: 'bd440b3ede375983d80751af0be4e4ac4cd9923ccf815ff533879cf07c06ca1f',
+        port: '49153',
+        status: 'running'
+      },
+      temp_49157: {
+        containerID: '8074590588c1c4caae1d72c770c28f4d72d39eef3ea35d656a7c7362f3afad5f',
+        port: '49157',
+        status: 'running'
+      },
+      temp_49158: {
+        containerID: '7cad4d6f486378ee7104dea9cbc1ea3c1dd3a9e252648615d23ab70a3519adc8',
+        port: '49158',
+        status: 'running'
+      }
+    },
+    totalOwnedContainers: 4
+  }
+
+
+
+
+
+  Redis Info 
+
+  {
+
+   "sessionID":"Actual username"      //AUtomatically deleted after specified time
+    
+   "username": {  //treating as map[string]interface{}
+                      //String         interface{}
+                  Authentication:"pending,success,register" // register when handling secure 2fa registration
+                  Password:"sdkjflsdkj" //Only set when Auth is register
+                  JWT:"issued" // possible are issued, pending
+                  OTP:"2342534"
+                }                //AUtomatically deleted after specified time
+  
+
+  }
+
+
