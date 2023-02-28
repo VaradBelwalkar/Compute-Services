@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"crypto/hmac"
     "crypto/sha256"
+	"encoding/json"
+	"io/ioutil"
 	"crypto/subtle"
     "encoding/hex"
     "go.mongodb.org/mongo-driver/bson"
@@ -26,10 +28,39 @@ type resultStruct struct{
 
 var CollectionHandler *mongo.Collection 
 var Sys_CollectionHandler *mongo.Collection 
-
+var DatabaseHandler *mongo.Database
 
 //Register system information here (e.g docker images available)
 var sys_info = bson.M {"server":"private_cloud","docker_images":[]string{"ubuntu","nginx"}}
+
+type DBConfig struct {
+	Name string     	 `json:"name"`
+	Collections []string `json:"collections"`
+}
+
+type Config struct {
+	Emails []string `json:"emails"`
+	Database DBConfig `json:"database"`
+}
+
+func setupDB() (string,string,string){
+	// read the config file
+	data, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		fmt.Println("Config file not found, Please provide Configuration file!")
+		return "","",""
+	}
+
+	// unmarshal the JSON data into a Config struct
+	var config Config
+	if err := json.Unmarshal(data, &config); err != nil {
+		fmt.Println("Configuration file format invalid!")
+		return "","",""
+	}
+
+	return config.Database.Name,config.Database.Collections[0],config.Database.Collections[1]
+
+}
 
 
 func InitiateMongoDB(m *mongo.Client) (*mongo.Collection,*mongo.Collection) {
@@ -45,20 +76,24 @@ opts:=options.CreateCollectionOptions{
 	MaxDocuments:&maxDoc,
 }
 
-	db := m.Database("private_cloud")
+	dbName,userDetails,sysDetails:=setupDB()
+	if dbName=="" || userDetails == "" || sysDetails == ""{
+		return nil,nil
+	}
+	DatabaseHandler = m.Database(dbName)
 
 	// Check if the collection already exists (for users)
-	names, err := db.ListCollectionNames(context.TODO(), bson.D{})
+	names, err := DatabaseHandler.ListCollectionNames(context.TODO(), bson.D{})
 	if err != nil {
 		fmt.Println("Something went wrong!")
 	}
 	var sysFound, userFound bool = false, false
 	for _, name := range names {
 		if !userFound || !sysFound {
-			if name == "user_details"{
+			if name == userDetails{
 				userFound = true
 			}
-			if name == "system_details"{
+			if name == sysDetails{
 				sysFound = true
 			}
 		continue
@@ -70,7 +105,7 @@ opts:=options.CreateCollectionOptions{
 
 		// Create the collection
 		
-		err:= db.CreateCollection(context.TODO(), "user_details", &opts)
+		err:= DatabaseHandler.CreateCollection(context.TODO(), "user_details", &opts)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -78,7 +113,7 @@ opts:=options.CreateCollectionOptions{
 
 	if !sysFound {
 		// Create the collection
-		err:= db.CreateCollection(context.TODO(), "system_details", &opts)
+		err:= DatabaseHandler.CreateCollection(context.TODO(), "system_details", &opts)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -86,7 +121,7 @@ opts:=options.CreateCollectionOptions{
 	
 	//Handle adding system details here by creating new document int the system_details
 	
-return db.Collection("user_details"),db.Collection("system_details")
+return DatabaseHandler.Collection("user_details"),DatabaseHandler.Collection("system_details")
 	
 }
 

@@ -8,6 +8,7 @@ import (
 	"os"
 	"github.com/joho/godotenv"
     db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	rec "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/recovery"
     qh "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
 	"github.com/docker/docker/client"
@@ -68,7 +69,7 @@ func main() {
 	//Get handler for the "user_details" collection (creates collection if not exists)
     db.CollectionHandler,db.Sys_CollectionHandler=db.InitiateMongoDB(mongo_client);
 	db.Initiate_Redis()
-    
+    rec.UpdateContainerStatus()
     //login to be handled separatly
 
 	router.HandleFunc("/", as.RenderForm)								//DONE			
@@ -77,6 +78,11 @@ func main() {
 	router.HandleFunc("/logout", as.LogoutHandler).Methods("POST")		//DONE
 	router.HandleFunc("/otphandler", as.RenderForm).Methods("GET")
 	router.HandleFunc("/otphandler", as.OTPHandler).Methods("POST")
+	router.HandleFunc("/recoverpass", as.RenderForm).Methods("GET")
+	router.HandleFunc("/recoverpass", as.RecoverPass).Methods("POST")
+	router.HandleFunc("/recoverpasscheck", as.RenderForm).Methods("GET")
+	router.HandleFunc("/recoverpasscheck", as.RecoverPassCheck).Methods("POST")
+	router.HandleFunc("/recoverpass", as.RenderForm).Methods("POST")
 	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("GET")
 	router.HandleFunc("/container/run/{image}", qh.Container_Run).Methods("POST")
 	router.HandleFunc("/container/resume/{container}", qh.Container_Resume).Methods("GET")

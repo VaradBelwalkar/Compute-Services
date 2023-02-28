@@ -3,5 +3,16 @@
         "belwalkarvarad@gmail.com",
         "varadbelwalkar7@gmail.com"
         
+    ],
+    "database":{
+        "name":"private_cloud",
+        "collections":[
+            "user_details",
+            "system_details"
+        ]
+    },
+    "images":[
+        "some_ubuntu"
     ]
+    
 }

@@ -1,4 +1,4 @@
-package container_apisyy
+package container_apis
 
 import (
 	"context"
@@ -25,6 +25,17 @@ type resultStruct struct{
     Email string `bson:"email"`
 	ContainerInfo map[string]interface{} `bson:"containerInfo"`
 	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
+}
+
+var ImageArray []string
+
+func checkImage(userImage string) bool{
+	for _,availImage := range ImageArray{
+		if availImage == userImage{
+			return true
+		}
+	}
+	return false
 }
 
 
@@ -80,7 +91,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	}
 	//Here we get the document to work with
 
-	if imageName !="some_ubuntu"{
+	if !checkImage(imageName) {
 		return "","",404
 	}
 	
