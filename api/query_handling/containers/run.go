@@ -7,12 +7,11 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
-	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
-	"github.com/docker/docker/client"
+	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
 )
   // HandlerFunc to be registered
   func Container_Run(w http.ResponseWriter, r *http.Request) {
-	check,username:=as.Verify_Auth(w,r)
+	check,username:=auth.Verify_Auth(w,r)
 	if check!=true{
 		return
 	}

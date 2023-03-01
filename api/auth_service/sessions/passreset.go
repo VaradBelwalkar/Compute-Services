@@ -8,7 +8,7 @@ import (
 )
 
 
-func savePassResetSession(sessionID string,username string,password string,email string,OTP string)error{
+func savePassResetSession(sessionID string,username string,OTP string)error{
 	err:=rds.Redis_Set_Value_With_Timeout(sessionID,username,5)
 	if err!=true{
 		return errors.New("errorHolder")
@@ -29,12 +29,12 @@ func savePassResetSession(sessionID string,username string,password string,email
 	return nil	
 }
 
-func CreatePassResetSession(w http.ResponseWriter,username string,password string,email string,OTP string){
+func CreatePassResetSession(w http.ResponseWriter,username string,OTP string){
 		// Create a new session
 		sessionID := generateSessionID(10)
 		// Save the session
 
-		err:=savePassResetSession(sessionID,username,password,email,OTP)
+		err:=savePassResetSession(sessionID,username,OTP)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return

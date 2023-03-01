@@ -1,21 +1,20 @@
 package auth
 import(
 	"net/http"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
-	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
-	"github.com/gorilla/securecookie"
+	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
+	ssn "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
 )
 
 
 
-
+// For authenticating user against OTP after successful password confirmation
 func Temp_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
-	_,session_username,err:= RetrieveTempSession(r)
+	_,session_username,err:= ssn.RetrieveTempSession(r)
 	if err!=nil || session_username == ""{
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}
-	username,status:=VerifyHandler(r)
+	username,status:=jwt.VerifyHandler(r)
 	if status!=200 || username == ""{	
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
@@ -28,14 +27,14 @@ func Temp_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
 
 }
 
-
+// For authenticating user against OTP using temporary session created after user checked against already available  
 func Temp_Reg_auth(w http.ResponseWriter, r *http.Request) (bool,string,string,string) {
-	_,session_username,password,email,err:= RetrieveRegTempSession(r)
+	_,session_username,password,email,err:= ssn.RetrieveRegTempSession(r)
 	if err!=nil || session_username == ""{
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,"","",""
 	}
-	username,status:=VerifyHandler(r)
+	username,status:=jwt.VerifyHandler(r)
 	if status!=200 || username == ""{	
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,"","",""
@@ -51,12 +50,12 @@ func Temp_Reg_auth(w http.ResponseWriter, r *http.Request) (bool,string,string,s
 
 
 func Verify_Auth(w http.ResponseWriter, r *http.Request)(bool,string){
-	_,session_username,chk,err:= RetrieveAuthorizedSession(r)
+	_,session_username,chk,err:= ssn.RetrieveAuthorizedSession(r)
 	if err!=nil || session_username == "" || chk!=true{
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""
 	}
-	username,status:=VerifyHandler(r)
+	username,status:=jwt.VerifyHandler(r)
 	if status!=200 || username == ""{	
 		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
 		return false,""

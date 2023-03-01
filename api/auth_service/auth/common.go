@@ -1,8 +1,6 @@
 package auth
 import(
 	"net/http"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
-	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
 	"github.com/gorilla/securecookie"
 )
 

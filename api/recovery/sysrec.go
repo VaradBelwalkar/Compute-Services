@@ -6,7 +6,7 @@ import (
     "runtime"
     "github.com/docker/docker/client"
 	"go.mongodb.org/mongo-driver/bson"
-    mdb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+    mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 
 )
 
@@ -21,7 +21,7 @@ type resultStruct struct{
 
 func UpdateContainerStatus() error {
     // Get a cursor for all the documents in the collection
-    cursor, err := db.DatabaseHandler.Collection("user_details").Find(context.Background(), bson.M{})
+    cursor, err := mndb.DatabaseHandler.Collection("user_details").Find(context.Background(), bson.M{})
     if err != nil {
         return err
     }
@@ -55,7 +55,7 @@ func UpdateContainerStatus() error {
                             "$set":bson.M{"totalOwnedContainers":user.TotalOwnedContainers-1},
                         
                         }
-                            updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
+                            updateResult,check:=mndb.CollectionHandler.UpdateOne(ctx,filter,update)
                             if check!=nil || updateResult.MatchedCount!=1{
                                 return
                             }
@@ -75,7 +75,7 @@ func UpdateContainerStatus() error {
                             "containerInfo."+containerName+"."+"status":status,
                         }}
                     
-                        updateResult,err:=mdb.CollectionHandler.UpdateOne(ctx,filter,update)
+                        updateResult,err:=mndb.CollectionHandler.UpdateOne(ctx,filter,update)
                         if err!=nil || updateResult.MatchedCount!=1{
                             return 
                         }

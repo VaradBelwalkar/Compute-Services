@@ -2,13 +2,16 @@ package recovery
 
 import(
 	"net/http"
-	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
+	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
+	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
+	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
+	session "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
 )
 
 func RecoverPass(w http.ResponseWriter, r *http.Request) {
 
 	//CSRF handling
-	check:=as.HandleSubmit(w,r)
+	check:=csrf.HandleSubmit(w,r)
 	if check!=true{
 		return
 	}
@@ -19,20 +22,20 @@ email := r.FormValue("email")
 if username == "" || email == ""{
 	w.WriteHeader(http.StatusBadRequest) // 400 
 } else {
-	actEmail:=as.RetrieveEmail(username)
+	actEmail:=twofa.RetrieveEmail(username)
 	if email!=actEmail{
 		w.WriteHeader(http.StatusUnauthorized)
 		return 
 	}
 
 
-	chk,OTP:=as.TwoFA_Send(username,actEmail)
+	chk,OTP:=twofa.TwoFA_Send(username,actEmail)
 	if chk!=true{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	//Handle JWT signing and header creation 
-	token,err:=SignHandler(username)
+	token,err:=jwt.SignHandler(username)
 	if err!=nil{ 	
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -41,7 +44,7 @@ if username == "" || email == ""{
 	w.Header().Set("Authorization",tokenString)
 	
 	//setting cookie based session
-	CreatePassResetSession(w,username,OTP)
+	session.CreatePassResetSession(w,username,OTP)
 	return
 	//redirectTarget = "/internal"
 }

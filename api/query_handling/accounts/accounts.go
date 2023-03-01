@@ -6,8 +6,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	mng "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
-	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
+	mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
+	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
+	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
+	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
+	session "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
+	containers "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling/containers"
 	"go.mongodb.org/mongo-driver/bson"
 	"github.com/docker/docker/api/types/volume"
 )
@@ -52,7 +57,7 @@ func isAllowed(email string) bool{
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	//CSRF handling
-	check:=as.HandleSubmit(w,r)
+	check:=csrf.HandleSubmit(w,r)
 	if check!=true{
 		return
 	}
@@ -82,25 +87,25 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = mng.CollectionHandler.FindOne(context.TODO(), bson.M{"email": EMAIL}).Decode(&result)	//Cannot create account if email exists
+	err = mndb.CollectionHandler.FindOne(context.TODO(), bson.M{"email": EMAIL}).Decode(&result)	//Cannot create account if email exists
 	if err == nil {
 		w.WriteHeader( http.StatusNotAcceptable)  //406 statuscode
 		return
 	} else{			// Here if error is not nil, means document is not found, so free to create new document for the user
 
-		err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result) //Check for username conflicts
+		err = mndb.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result) //Check for username conflicts
 		if err == nil {
 			w.WriteHeader( http.StatusConflict)  //409 statuscode
 			return
 		} else{	
 
-			chk,OTP:=as.TwoFA_Send(username,EMAIL)
+			chk,OTP:=twofa.TwoFA_Send(username,EMAIL)
 			if chk!=true{
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 			//Handle JWT signing and header creation 
-			token,err:=as.SignHandler(username)
+			token,err:=jwt.SignHandler(username)
 			if err!=nil{ 	
 				w.WriteHeader(http.StatusInternalServerError)
 				return
@@ -109,7 +114,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Authorization",tokenString)
 			
 			//setting cookie based session
-			as.CreateRegTempSession(w,username,password,EMAIL,OTP)
+			session.CreateRegTempSession(w,username,password,EMAIL,OTP)
 			return
  
  		}
@@ -120,11 +125,11 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 func VerifyRegisterUser(w http.ResponseWriter, r *http.Request){
 
 			//CSRF handling
-			check:=as.HandleSubmit(w,r)
+			check:=csrf.HandleSubmit(w,r)
 			if check!=true{
 				return
 			}
-			check,username,password,EMAIL:=as.Temp_Reg_auth(w,r)
+			check,username,password,EMAIL:=auth.Temp_Reg_auth(w,r)
 			if check!=true{
 				return
 			}
@@ -137,7 +142,7 @@ func VerifyRegisterUser(w http.ResponseWriter, r *http.Request){
 	
 	
 	
-			chk:=as.TwoFA_Verify(username,OTP)					//Deletes the <username> temporary key when true
+			chk:=twofa.TwoFA_Verify(username,OTP)					//Deletes the <username> temporary key when true
 			if chk!=true{
 				w.WriteHeader(http.StatusUnauthorized)			
 				return
@@ -148,14 +153,14 @@ func VerifyRegisterUser(w http.ResponseWriter, r *http.Request){
 		Driver:"local",
 	}
 
-	_,err:=Cli.VolumeCreate(context.TODO(),volumeOpts)
+	_,err:=containers.Cli.VolumeCreate(context.TODO(),volumeOpts)
 	if err!=nil{
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 // Insert the new user into the database
-	hashedPassword:=db.ComputeHash(password)
-_, err = mng.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": hashedPassword,"email":EMAIL})
+	hashedPassword:=mndb.ComputeHash(password)
+_, err = mndb.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": hashedPassword,"email":EMAIL})
 if err != nil {
 	w.WriteHeader(http.StatusInternalServerError)
 	return
@@ -174,7 +179,7 @@ w.WriteHeader(http.StatusOK)
 func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 
 	//CSRF handling
-	check:=as.HandleSubmit(w,r)
+	check:=csrf.HandleSubmit(w,r)
 	if check!=true{
 		return
 	}
@@ -201,19 +206,19 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result:=resultStruct{}
-	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
+	err = mndb.CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
 	if err == nil {
 
 		//Check if the password matches
 		if password == result.Password{
 		// Remove the user document from the user_details
 
-		err:=Cli.VolumeRemove(context.TODO(),username,true)
+		err:=containers.Cli.VolumeRemove(context.TODO(),username,true)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		_,err = mng.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
+		_,err = mndb.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return

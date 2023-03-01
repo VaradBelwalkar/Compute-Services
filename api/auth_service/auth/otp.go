@@ -1,9 +1,10 @@
 package auth
 import(
 	"net/http"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
-	"github.com/gorilla/securecookie"
+	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
+	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
+	ssn "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
 )
 
 
@@ -13,7 +14,7 @@ import(
 func OTPHandler(w http.ResponseWriter, r *http.Request){
 
 		//CSRF handling
-		check:=HandleSubmit(w,r)
+		check:=csrf.HandleSubmit(w,r)
 		if check!=true{
 			return
 		}
@@ -36,7 +37,7 @@ func OTPHandler(w http.ResponseWriter, r *http.Request){
 			return
 		}
 		//Handle JWT signing and header creation 
-		token,err:=SignHandler(username)		
+		token,err:=jwt.SignHandler(username)		
 		if err!=nil{ 	
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -45,7 +46,7 @@ func OTPHandler(w http.ResponseWriter, r *http.Request){
 		w.Header().Set("Authorization",tokenString)
 		
         //setting cookie based session
-		CreateSession(w,username)					//Creates new session valid for 24hrs
+		ssn.CreateSession(w,username)					//Creates new session valid for 24hrs
 		//redirectTarget = "/internal"
 	}
 	//http.Redirect(response, request, redirectTarget, 302)
