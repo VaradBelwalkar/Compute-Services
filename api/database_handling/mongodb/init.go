@@ -4,44 +4,13 @@ import (
 	"context"
 	"log"
 	"fmt"
-	"crypto/hmac"
-    "crypto/sha256"
 	"encoding/json"
 	"io/ioutil"
-	"crypto/subtle"
-    "encoding/hex"
     "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var PassHashKey string
-
-//Global Objects 
-type resultStruct struct{
-	Username string `bson:"username"`
-	Password string `bson:"password"`					// In the hash format
-    Email string `bson:"email"`
-	ContainerInfo map[string]interface{} `bson:"containerInfo"`
-	TotalOwnedContainers int `bson:"totalOwnedContainers,omitempty"`
-}
-
-var CollectionHandler *mongo.Collection 
-var Sys_CollectionHandler *mongo.Collection 
-var DatabaseHandler *mongo.Database
-
-//Register system information here (e.g docker images available)
-var sys_info = bson.M {"server":"private_cloud","docker_images":[]string{"ubuntu","nginx"}}
-
-type DBConfig struct {
-	Name string     	 `json:"name"`
-	Collections []string `json:"collections"`
-}
-
-type Config struct {
-	Emails []string `json:"emails"`
-	Database DBConfig `json:"database"`
-}
 
 func setupDB() (string,string,string){
 	// read the config file
@@ -125,41 +94,5 @@ return DatabaseHandler.Collection("user_details"),DatabaseHandler.Collection("sy
 	
 }
 
-func ComputeHash(password string) string {
-    key := []byte(PassHashKey)
-    h := hmac.New(sha256.New, key)
-    h.Write([]byte(password))
-    hash := hex.EncodeToString(h.Sum(nil))
-    return hash
-}
-
-func compareHashAndPassword(hash, password string) bool {
-    expectedHash := ComputeHash(password)
-    return subtle.ConstantTimeCompare([]byte(hash), []byte(expectedHash)) == 1
-}
-
-//Authenticate user against DB entry
-//Returns appropriate statusCodes
-func Authenticate_user(username string,password string)(int){
-	//CHANGE THIS LATER
-	result:=resultStruct{}
-
-	err := CollectionHandler.FindOne(context.TODO(), bson.M{"username": username}).Decode(&result)
-	if err == mongo.ErrNoDocuments {	
-		return 404
-	} else if err != nil {
-		return 500
-	} else {
-		chk:=compareHashAndPassword(result.Password,password)
-		if chk==true{
-			return 200
-		}else{
-			return 401
-		}
-		// If a document with the specified username already exists, update it
-	}
-
-
-}
 
 
