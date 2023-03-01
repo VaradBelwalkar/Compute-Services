@@ -9,7 +9,7 @@ import (
 	"crypto/x509"
 	"golang.org/x/crypto/ssh"
 	"encoding/pem"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 )
 
 type resultStruct struct{

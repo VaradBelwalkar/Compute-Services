@@ -43,7 +43,7 @@ documentData
     
    "username": {  //treating as map[string]interface{}
                       //String         interface{}
-                  Authentication:"pending,success,register" // register when handling secure 2fa registration
+                  Authentication:"pending,success,register,passreset" // register when handling secure 2fa registration
                   Password:"sdkjflsdkj" //Only set when Auth is register
                   JWT:"issued" // possible are issued, pending
                   OTP:"2342534"

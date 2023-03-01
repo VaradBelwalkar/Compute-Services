@@ -6,14 +6,14 @@ import (
 	"encoding/json"
 	"time"
 	"errors"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
 
 
 
 // Save a session (only occurs when new session is going to be created)
 func saveSession(sessionID string,username string) error{
-	err:=db.Redis_Set_Value_With_Timeout(sessionID,username,1440)
+	err:=rds.Redis_Set_Value_With_Timeout(sessionID,username,1440)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -24,7 +24,7 @@ func saveSession(sessionID string,username string) error{
     if chk != nil {
         return errors.New("errorHolder")
     }
-	err=db.Redis_Set_Value_With_Timeout(username,string(jsonFormat),1440)
+	err=rds.Redis_Set_Value_With_Timeout(username,string(jsonFormat),1440)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -60,13 +60,13 @@ func RetrieveAuthorizedSession(r *http.Request) (string,string,bool,error){
 	}
 	// Get the session by ID
 
-	username:=db.Redis_Get_Value(sessionID.Value)
+	username:=rds.Redis_Get_Value(sessionID.Value)
 	if username == ""{
 		return "","",false,errors.New("errorHolder")
 	}
 
     UserInstance:=make(map[string]string)
-    jsonString:=db.Redis_Get_Value(username)
+    jsonString:=rds.Redis_Get_Value(username)
     err = json.Unmarshal([]byte(jsonString), &UserInstance)
     if err != nil {
         return "","",false,nil

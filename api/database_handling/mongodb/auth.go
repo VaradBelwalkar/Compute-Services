@@ -1,4 +1,4 @@
-package database_handling
+package mongodb
 
 import (
 	"context"

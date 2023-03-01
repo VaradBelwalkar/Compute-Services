@@ -2,7 +2,7 @@ package auth_service
 
 import (
 	"math/rand"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
 
 
@@ -13,12 +13,12 @@ func generateSessionID(n int) string {
     for i := range b {
         b[i] = letters[rand.Intn(len(letters))]
     }
-	ok := db.Redis_Check_Key(string(b))
+	ok := rds.Redis_Check_Key(string(b))
 	for ok==true{
 		for i := range b {
 			b[i] = letters[rand.Intn(len(letters))]
 		}
-		ok = db.Redis_Check_Key(string(b))
+		ok = rds.Redis_Check_Key(string(b))
 	}
     return string(b)
 }

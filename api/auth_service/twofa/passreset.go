@@ -1,9 +1,9 @@
-package auth_service
+package twofa
 
 import (
 	"net/smtp"
     "encoding/json"
-    db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+    rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
 
 func PassReset_Send(username string,eMail string)(bool,string) {
@@ -44,7 +44,7 @@ return true,OTP
 
 func PassReset_Verify(username string, SentOTP string) bool{
     UserInstance:=make(map[string]string)
-    jsonString:=db.Redis_Get_Value(username)
+    jsonString:=rds.Redis_Get_Value(username)
     err := json.Unmarshal([]byte(jsonString), &UserInstance)
     if err != nil {
         return false
@@ -54,7 +54,7 @@ func PassReset_Verify(username string, SentOTP string) bool{
         return false
     }
     if StoredOTP == SentOTP{
-        _=db.Redis_Delete_key(username)
+        _=rds.Redis_Delete_key(username)
         return true
     }else {
         return false

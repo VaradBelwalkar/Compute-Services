@@ -6,7 +6,7 @@ import (
     "runtime"
     "github.com/docker/docker/client"
 	"go.mongodb.org/mongo-driver/bson"
-    db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+    mdb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 
 )
 
@@ -75,7 +75,7 @@ func UpdateContainerStatus() error {
                             "containerInfo."+containerName+"."+"status":status,
                         }}
                     
-                        updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
+                        updateResult,err:=mdb.CollectionHandler.UpdateOne(ctx,filter,update)
                         if err!=nil || updateResult.MatchedCount!=1{
                             return 
                         }

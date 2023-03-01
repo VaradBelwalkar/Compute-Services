@@ -1,4 +1,4 @@
-package database_handling
+package redis
 
 import (
 	"time"

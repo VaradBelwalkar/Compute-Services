@@ -1,4 +1,4 @@
-package query_handling
+package accounts
 
 import (
 
@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	mng "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 	as "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service"
 	"go.mongodb.org/mongo-driver/bson"
 	"github.com/docker/docker/api/types/volume"
@@ -82,7 +82,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	// Check if a document with the given username already exists
 	var result bson.M
-	err = db.CollectionHandler.FindOne(context.TODO(), bson.M{"email": EMAIL}).Decode(&result)	//Cannot create account if email exists
+	err = mng.CollectionHandler.FindOne(context.TODO(), bson.M{"email": EMAIL}).Decode(&result)	//Cannot create account if email exists
 	if err == nil {
 		w.WriteHeader( http.StatusNotAcceptable)  //406 statuscode
 		return
@@ -155,7 +155,7 @@ func VerifyRegisterUser(w http.ResponseWriter, r *http.Request){
 	}
 // Insert the new user into the database
 	hashedPassword:=db.ComputeHash(password)
-_, err = db.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": hashedPassword,"email":EMAIL})
+_, err = mng.CollectionHandler.InsertOne(context.TODO(), bson.M{"username": username, "password": hashedPassword,"email":EMAIL})
 if err != nil {
 	w.WriteHeader(http.StatusInternalServerError)
 	return
@@ -213,7 +213,7 @@ func RemoveAccount(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		_,err = db.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
+		_,err = mng.CollectionHandler.DeleteOne(context.TODO(),bson.M{"username": username})
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return

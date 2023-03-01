@@ -1,4 +1,4 @@
-package auth_service
+package twofa
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"strconv"
     "math/rand"
     "go.mongodb.org/mongo-driver/bson"
-    db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+    mng "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+    rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
 type resultStruct struct{
 	Username string `bson:"username"`
@@ -32,7 +33,7 @@ func RetrieveEmail(username string) string{
     ctx:=context.Background()
 	//Check user-document exists in the collection 
 	//document_handler of type *SingleResult, see github code for more details
-	err := db.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
+	err := mng.CollectionHandler.FindOne(ctx,bson.M{"username":username}).Decode(&documentData)
 	//If not then use following	
 	if err != nil {		
 			return ""	// Internal server error
@@ -83,7 +84,7 @@ return true,OTP
 
 func TwoFA_Verify(username string, SentOTP string) bool{
     UserInstance:=make(map[string]string)
-    jsonString:=db.Redis_Get_Value(username)
+    jsonString:=rds.Redis_Get_Value(username)
     err := json.Unmarshal([]byte(jsonString), &UserInstance)
     if err != nil {
         return false
@@ -93,7 +94,7 @@ func TwoFA_Verify(username string, SentOTP string) bool{
         return false
     }
     if StoredOTP == SentOTP{
-        _=db.Redis_Delete_key(username)
+        _=rds.Redis_Delete_key(username)
         return true
     }else {
         return false

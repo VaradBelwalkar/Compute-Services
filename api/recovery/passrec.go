@@ -41,7 +41,7 @@ if username == "" || email == ""{
 	w.Header().Set("Authorization",tokenString)
 	
 	//setting cookie based session
-	CreateTempSession(w,username,OTP)
+	CreatePassResetSession(w,username,OTP)
 	return
 	//redirectTarget = "/internal"
 }

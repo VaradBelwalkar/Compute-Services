@@ -4,12 +4,12 @@ import (
 	"net/http"
 	"encoding/json"
 	"errors"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
 
 
 func saveRegTempSession(sessionID string,username string,password string,email string,OTP string)error{
-	err:=db.Redis_Set_Value_With_Timeout(sessionID,username,5)
+	err:=rds.Redis_Set_Value_With_Timeout(sessionID,username,5)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -24,7 +24,7 @@ func saveRegTempSession(sessionID string,username string,password string,email s
         return errors.New("errorHolder")
     }
 
-	err=db.Redis_Set_Value_With_Timeout(username,string(jsonFormat),5)
+	err=rds.Redis_Set_Value_With_Timeout(username,string(jsonFormat),5)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
@@ -59,13 +59,13 @@ func RetrieveRegTempSession(r *http.Request) (string,string,string,string,error)
 	}
 	// Get the session by ID
 
-	username:=db.Redis_Get_Value(sessionID.Value)
+	username:=rds.Redis_Get_Value(sessionID.Value)
 	if username == ""{
 		return "","","","",errors.New("errorHolder")
 	}
 
 	UserInstance:=make(map[string]string)
-    jsonString:=db.Redis_Get_Value(username)
+    jsonString:=rds.Redis_Get_Value(username)
     err = json.Unmarshal([]byte(jsonString), &UserInstance)
     if err != nil {
         return "","","","",nil

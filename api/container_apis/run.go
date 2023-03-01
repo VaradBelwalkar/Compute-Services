@@ -11,7 +11,7 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling"
+	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 )
 
 //Create a new container
