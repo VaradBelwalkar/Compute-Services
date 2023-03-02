@@ -56,7 +56,7 @@ if username == "" || email == ""{
 }
 
 
-
+//POST -> CHECK OTP
 func RecoverPassCheck(w http.ResponseWriter, r *http.Request) {
 		//CSRF handling
 		check:=csrf.HandleSubmit(w,r)
