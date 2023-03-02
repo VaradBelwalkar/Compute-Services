@@ -73,7 +73,7 @@ opts:=options.CreateCollectionOptions{
 	if !userFound {
 
 		// Create the collection
-		
+		userDetails="user_details"
 		err:= DatabaseHandler.CreateCollection(context.TODO(), "user_details", &opts)
 		if err != nil {
 			log.Fatal(err)
@@ -82,6 +82,7 @@ opts:=options.CreateCollectionOptions{
 
 	if !sysFound {
 		// Create the collection
+		sysDetails="system_details"
 		err:= DatabaseHandler.CreateCollection(context.TODO(), "system_details", &opts)
 		if err != nil {
 			log.Fatal(err)
@@ -90,7 +91,7 @@ opts:=options.CreateCollectionOptions{
 	
 	//Handle adding system details here by creating new document int the system_details
 	
-return DatabaseHandler.Collection("user_details"),DatabaseHandler.Collection("system_details")
+return DatabaseHandler.Collection(userDetails),DatabaseHandler.Collection(sysDetails)
 	
 }
 

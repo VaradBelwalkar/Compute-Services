@@ -1,5 +1,3 @@
-#!/bin/bash
-
 ################### ************IMPORTANT************ ###################
 #   DO NOT CHANGE THE **PASSWORD_HASH_SECRET** ONCE RUNNING, IF CHANGED,AFTER RESTART,
 #   YOU WON'T BE ABLE TO AUTHENTICATE USERS BASED ON THEIR PASSWORDS

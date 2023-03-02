@@ -7,15 +7,10 @@ import (
 
 )
 
-
-
-// The main function manages all the query handling and manages the database as well
 func main() {
-    
-	Setup_Env()
     // server main method
-    var router = Setup()
+    var router,server_port = Setup()
 
 	http.Handle("/", router)
-	http.ListenAndServe(":8000", handlers.LoggingHandler(os.Stdout, http.DefaultServeMux))
-}
+	http.ListenAndServe(":"+server_port, handlers.LoggingHandler(os.Stdout, http.DefaultServeMux))
+}	

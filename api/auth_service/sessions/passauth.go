@@ -8,16 +8,14 @@ import (
 )
 
 
-
-func saveTempSession(sessionID string,username string,OTP string)error{
+func savePassAuthSession(sessionID string,username string)error{
 	err:=rds.Redis_Set_Value_With_Timeout(sessionID,username,5)
 	if err!=true{
 		return errors.New("errorHolder")
 	}
 	val:=make(map[string]string)
-	val["Authentication"]="pending"
+	val["Authentication"]="passauth"
 	val["JWT"]="issued"
-	val["OTP"]=OTP
 	jsonFormat, chk := json.Marshal(val)
     if chk != nil {
         return errors.New("errorHolder")
@@ -30,12 +28,12 @@ func saveTempSession(sessionID string,username string,OTP string)error{
 	return nil	
 }
 
-func CreateTempSession(w http.ResponseWriter,username string,OTP string){
+func CreatePassAuthSession(w http.ResponseWriter,username string){
 		// Create a new session
 		sessionID := generateSessionID(10)
 		// Save the session
 
-		err:=saveTempSession(sessionID,username,OTP)
+		err:=savePassAuthSession(sessionID,username)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
 			return
@@ -50,7 +48,7 @@ func CreateTempSession(w http.ResponseWriter,username string,OTP string){
 }
 
 // A handler function that retrieves a session by ID
-func RetrieveTempSession(r *http.Request) (string,string,error){
+func RetrievePassAuthSession(r *http.Request) (string,string,error){
 	// Get the session ID from the request
 	sessionID, err := r.Cookie("session")
 	if err != nil {
@@ -69,8 +67,9 @@ func RetrieveTempSession(r *http.Request) (string,string,error){
     if err != nil {
         return "","",nil
     }
-	if UserInstance["Authentication"] == "pending"{
+	if UserInstance["Authentication"] == "passauth"{
 		return sessionID.Value,username,nil
 	}else{
-	return "","",nil}
+		return "","",errors.New("errorHolder")}
 }
+

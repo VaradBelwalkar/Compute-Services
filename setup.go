@@ -4,6 +4,9 @@ import (
 	"context"
 	"log"
 	"os"
+	"fmt"
+	"io/ioutil"
+	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
@@ -22,6 +25,17 @@ import (
 //const url = "mongodb://host1:27017,host2:27017,host3:27017/?replicaSet=myRS"
 
 var mongoURL string
+type dbConfig struct {
+	Name string     	 `json:"name"`
+	Collections []string `json:"collections"`
+}
+
+type config struct {
+	Emails []string `json:"emails"`
+	Database dbConfig `json:"database"`
+	Port string `json:"server_port"`
+}
+
 
 func Setup_Env(){
 	err := godotenv.Load(".env")
@@ -38,7 +52,7 @@ func Setup_Env(){
 
 
 // The main function manages all the query handling and manages the database as well
-func Setup() *mux.Router{
+func Setup() (*mux.Router,string){
     
 	Setup_Env()
     //Initiate Mongo client
@@ -65,5 +79,21 @@ func Setup() *mux.Router{
     //login to be handled separatly
 	router:=routes.NewRouter()
 
-	return router
+	//Get server port from configuration
+		// read the config file
+		data, err := ioutil.ReadFile("config.json")
+		if err != nil {
+			fmt.Println("Config file not found, Please provide Configuration file!")
+			return nil,""
+		}
+	
+		// unmarshal the JSON data into a Config struct
+		var config config
+		if err := json.Unmarshal(data, &config); err != nil {
+			fmt.Println("Configuration file format invalid!")
+			return nil,""
+		}
+
+
+	return router,config.Port
 }

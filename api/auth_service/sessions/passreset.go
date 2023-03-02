@@ -49,28 +49,28 @@ func CreatePassResetSession(w http.ResponseWriter,username string,OTP string){
 }
 
 // A handler function that retrieves a session by ID
-func RetrievePassResetSession(r *http.Request) (string,string,string,string,error){
+func RetrievePassResetSession(r *http.Request) (string,string,string,error){
 	// Get the session ID from the request
 	sessionID, err := r.Cookie("session")
 	if err != nil {
-		return "","","","",err // Here the error means cookie doesn't exist
+		return "","","",err // Here the error means cookie doesn't exist
 	}
 	// Get the session by ID
 
 	username:=rds.Redis_Get_Value(sessionID.Value)
 	if username == ""{
-		return "","","","",errors.New("errorHolder")
+		return "","","",errors.New("errorHolder")
 	}
 
 	UserInstance:=make(map[string]string)
     jsonString:=rds.Redis_Get_Value(username)
     err = json.Unmarshal([]byte(jsonString), &UserInstance)
     if err != nil {
-        return "","","","",nil
+        return "","","",nil
     }
 	if UserInstance["Authentication"] == "passreset"{
-		return sessionID.Value,username,UserInstance["Password"],UserInstance["Email"],nil
+		return sessionID.Value,username,UserInstance["OTP"],nil
 	}else{
-		return "","","","",errors.New("errorHolder")}
+		return "","","",errors.New("errorHolder")}
 }
 

@@ -11,7 +11,7 @@ import (
 
 var PassHashKey string
 
-//Global Objects 
+//Global Object for user details
 type resultStruct struct{
 	Username string `bson:"username"`
 	Password string `bson:"password"`					// In the hash format

@@ -47,6 +47,45 @@ func Temp_Reg_auth(w http.ResponseWriter, r *http.Request) (bool,string,string,s
 
 }
 
+// For authenticating user against OTP using temporary session created after user checked against already available  
+func Temp_Pass_auth(w http.ResponseWriter, r *http.Request) (bool,string,string) {
+	_,session_username,OTP,err:= ssn.RetrievePassResetSession(r)
+	if err!=nil || session_username == ""{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"",""
+	}
+	username,status:=jwt.VerifyHandler(r)
+	if status!=200 || username == ""{	
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"",""
+	}
+	if session_username!=username{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,"",""
+	}
+	return true,username,OTP
+
+}
+
+
+func Verify_Pass_auth(w http.ResponseWriter, r *http.Request) (bool,string) {
+	_,session_username,err:= ssn.RetrievePassAuthSession(r)
+	if err!=nil || session_username == ""{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	username,status:=jwt.VerifyHandler(r)
+	if status!=200 || username == ""{	
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	if session_username!=username{
+		w.WriteHeader(http.StatusUnauthorized) // 401 meaning user should login again
+		return false,""
+	}
+	return true,username
+
+}
 
 
 func Verify_Auth(w http.ResponseWriter, r *http.Request)(bool,string){

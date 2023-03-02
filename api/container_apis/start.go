@@ -78,7 +78,6 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 	}
 	
 	r := bytes.NewReader(b.Bytes())
-
 	t, errInfo := ioutil.ReadAll(r)
 	if errInfo != nil {
 		return "","",500
