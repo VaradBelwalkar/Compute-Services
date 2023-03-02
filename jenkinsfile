@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone repository') {
+            steps {
+                git 'github.com/VaradBelwalkar/Private-Cloud-MongoDB'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'go build -o myapp ./cmd/myapp'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'go test ./...'
+            }
+        }
+        stage('Build Docker image') {
+            steps {
+                sh 'docker build -t VaradBelwalkar/golang_server .'
+            }
+        }
+        stage('Push Docker image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD'
+                    sh 'docker push VaradBelwalkar/golang_server'
+                }
+            }
+        }
+        stage('Deploy to server') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+    }
+}
