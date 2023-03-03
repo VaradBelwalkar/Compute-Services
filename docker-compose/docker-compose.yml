@@ -3,26 +3,31 @@ version: '3.9'
 services:
   golang_server:
     image: VaradBelwalkar/golang_server
+    restart: alwaysq
     ports:
       - "8080:8000"
     volumes:
-      - ./config.json:/app/config.json
+      - ./config.json:/root/app/config.json
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - MONGODB_URI=${MONGODB_URI}
-      - REDIS_URL=${REDIS_URL}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - PASSWORD_HASH_SECRET=${PASSWORD_HASH_SECRET}
-      - OFFICIAL_EMAIL=${OFFICIAL_EMAIL}
-      - OFFICIAL_EMAIL_APP_PASSWORD=${OFFICIAL_EMAIL_APP_PASSWORD}
+      - MONGODB_URI="mongodb://user:pwd@mongo:27017"
+      - REDIS_URL="redis:6379"
+      - REDIS_PASSWORD=REDIS_PASSWORD
+      - JWT_SECRET=JWT_SECRET
+      - PASSWORD_HASH_SECRET=PASSWORD_HASH_SECRET
+      - OFFICIAL_EMAIL=OFFICIAL_EMAIL
+      - OFFICIAL_EMAIL_APP_PASSWORD=OFFICIAL_EMAIL_APP_PASSWORD
     depends_on:
       - redis
       - mongodb
 
   redis:
     image: redis
-
+    restart: always
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    entrypoint: /bin/sh -c
+    command: redis-server /usr/local/etc/redis/redis.conf
   mongodb:
     image: mongo
     restart: always
