@@ -13,6 +13,7 @@ import (
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
 	containers "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling/containers"
+	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/routes"
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/recovery"
 	"github.com/docker/docker/client"
@@ -34,6 +35,7 @@ type config struct {
 	Emails []string `json:"emails"`
 	Database dbConfig `json:"database"`
 	Port string `json:"server_port"`
+	Images []string `json:"images"`
 }
 
 
@@ -93,6 +95,8 @@ func Setup() (*mux.Router,string){
 			fmt.Println("Configuration file format invalid!")
 			return nil,""
 		}
+
+		container_apis.ImageArray = config.Images
 
 
 	return router,config.Port
