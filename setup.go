@@ -12,6 +12,7 @@ import (
 	mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
+    "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
 	containers "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling/containers"
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
 	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/routes"
@@ -50,6 +51,8 @@ func Setup_Env(){
     redis.Redis_Password = os.Getenv("REDIS_PASSWORD")
 	mndb.PassHashKey = os.Getenv("PASSWORD_HASH_SECRET")
 	jwt.JWTSigningKey = os.Getenv("JWT_SECRET")
+	twofa.Official_Email = os.Getenv("OFFICIAL_EMAIL")
+	twofa.Official_Email_Password =  os.Getenv("OFFICIAL_EMAIL_APP_PASSWORD")
 }
 
 

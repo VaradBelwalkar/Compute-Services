@@ -11,6 +11,10 @@ import (
     mng "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
     rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
+
+var Official_Email string
+var Official_Email_Password string
+
 type resultStruct struct{
 	Username string `bson:"username"`
 	Password string `bson:"password"`
@@ -54,8 +58,6 @@ func TwoFA_Send(username string,eMail string)(bool,string) {
         return false,""
     }
 }
-    from := "officialdyplug@gmail.com"
-    password := "oskpnzbzxwzkvpmu" //Change to get from the env
     toEmailAddress := eMail //Should be dynamic generated format
     to := []string{toEmailAddress}
 
@@ -72,9 +74,9 @@ func TwoFA_Send(username string,eMail string)(bool,string) {
     //body := "Dear User,\n\nYour OTP for two-factor authentication is: " + OTP + "\n\nPlease enter this otp in your app to complete the authentication process.\n\nBest regards,\nDYPLUG"
     //message := []byte(subject + body)                           //Don't use colon(:)
 
-    auth := smtp.PlainAuth("", from, password, host)
+    auth := smtp.PlainAuth("", Official_Email, Official_Email_Password, host)
 
-    err := smtp.SendMail(address, auth, from, to, msg)
+    err := smtp.SendMail(address, auth, Official_Email, to, msg)
     if err != nil {
         return false,""
     }

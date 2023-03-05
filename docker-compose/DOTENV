@@ -1,0 +1,28 @@
+################### ************IMPORTANT************ ###################
+#   DO NOT CHANGE THE **PASSWORD_HASH_SECRET** ONCE RUNNING, IF CHANGED,AFTER RESTART,
+#   YOU WON'T BE ABLE TO AUTHENTICATE USERS BASED ON THEIR PASSWORDS
+#   RECOMMENDED: BACKUP **PASSWORD_HASH_SECRET** 
+
+# Set MongoDB URL and password
+#MONGODB_URI="mongodb://user:pwd@localhost:27017" #Must provide Username and Password in the URL
+MONGODB_URI=""
+# Set Redis URL and password
+REDIS_URL=""
+REDIS_PASSWORD=""
+
+# Set JWT secret key
+JWT_SECRET=""
+# Set password hashing secret key
+PASSWORD_HASH_SECRET=""
+
+#Set the email you want to use for sending emails for verification, registration etc
+OFFICIAL_EMAIL=""
+#Add APP Password here
+OFFICIAL_EMAIL_APP_PASSWORD=""
+
+
+#Setup the Redis password by first locating /etc/redis/redis.conf file, then,
+
+#Uncomment this line "# requirepass foobared"
+
+#And make it to "requirepass <your_super_secure_password>"

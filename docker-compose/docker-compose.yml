@@ -1,38 +1,34 @@
 version: '3.9'
-
 services:
   golang_server:
-    image: VaradBelwalkar/golang_server
-    restart: alwaysq
+    image: varadbelwalkar/golang_server
+    container_name: golang_server
     ports:
-      - "8080:8000"
+      - 8080:8000
     volumes:
-      - ./config.json:/root/app/config.json
       - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      - MONGODB_URI="mongodb://user:pwd@mongo:27017"
-      - REDIS_URL="redis:6379"
-      - REDIS_PASSWORD=REDIS_PASSWORD
-      - JWT_SECRET=JWT_SECRET
-      - PASSWORD_HASH_SECRET=PASSWORD_HASH_SECRET
-      - OFFICIAL_EMAIL=OFFICIAL_EMAIL
-      - OFFICIAL_EMAIL_APP_PASSWORD=OFFICIAL_EMAIL_APP_PASSWORD
+      - ./config.json:/app/config.json
+      - ./.env:/app/.env
     depends_on:
+      - mongo
       - redis
-      - mongodb
+
 
   redis:
     image: redis
-    restart: always
+    container_name: redis
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf
-    entrypoint: /bin/sh -c
     command: redis-server /usr/local/etc/redis/redis.conf
-  mongodb:
-    image: mongo
-    restart: always
-    volumes:
-    - mndbdatabase:/data/db
-    MONGO_INITDB_ROOT_USERNAME: <set_username_here>
-    MONGO_INITDB_ROOT_PASSWORD: <set_password_here>
 
+  mongo:
+    image: mongo
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: private_cloud
+    volumes:
+      - mndbdatabase:/data/db
+volumes:
+  mndbdatabase:
