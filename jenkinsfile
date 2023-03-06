@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Build') {
             steps {
-                sh 'go build -o myapp ./cmd/myapp'
+                sh 'go build -o bin/golang_server'
             }
         }
         stage('Test') {
