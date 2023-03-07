@@ -1,0 +1,8 @@
+#Default image for this server
+FROM ubuntu
+
+RUN apt-get update && apt-get install openssh-server sudo -y && useradd -m user && usermod -aG sudo user && echo 'user:password' | chpasswd && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && apt-get clean && chsh -s /bin/bash
+
+RUN mkdir /home/root/.ssh && touch /home/root/.ssh/authorized_keys 
+
+CMD ["service","ssh","start","-D"]	

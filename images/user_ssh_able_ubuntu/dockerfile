@@ -1,0 +1,8 @@
+#To use this, you need to build the source code by making appropriate changes
+FROM ubuntu
+USER root
+RUN apt-get update && apt-get install openssh-server sudo -y && useradd -m user && usermod -aG sudo user && echo 'user:password' | chpasswd && echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && apt-get clean && chsh -s /bin/bash
+USER user
+RUN mkdir /home/user/.ssh && touch /home/user/.ssh/authorized_keys 
+USER root
+CMD ["service","ssh","start","-D"]	
