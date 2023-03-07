@@ -1,0 +1,255 @@
+[
+  {
+    "question": "Which one is incorrect ?",
+    "options": {
+      "a": "Uber-server handling",
+      "b": "Netflix-heavy data processing",
+      "c": "Docker - written in go",
+      "d": "All of the above"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "Is Go Language is case-sensitive?",
+    "options": {
+      "a": "Yes",
+      "b": "No",
+      "c": "Can't say",
+      "d": "Both"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "What is the default value of String in Go language?",
+    "options": {
+      "a": "0",
+      "b": "-1",
+      "c": " ",
+      "d": "NULL"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "Which function is used to get current time and date?",
+    "options": {
+      "a": "Time()",
+      "b": "Time.Now()",
+      "c": "Time.Now.Date()",
+      "d": "Time.Date.Now()"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "Chinki gave huge quantity of chocolates to Minki. She gave order to Minki to arrange all the chocolates in serial order. Minki don't have any idea regarding the exact count of chocolate. What will we use if we want to display the serial order  which Minki formed in go lang?",
+    "options": {
+      "a": "Maps",
+      "b": "Arrays",
+      "c": "Slices",
+      "d": "None of these"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "For the prize distribution of Metamorphosis, Ash was called. He is confused that which footwear will match to his outfits. Could you help him to match the footwear with his outfits. What can you use if you want to help him?",
+    "options": {
+      "a": "Maps",
+      "b": "Slice",
+      "c": "Array",
+      "d": "None of these"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "John is confused in the syntax of defining map. Help him find the correct one?",
+    "options": {
+      "a": "map_name := make(map[value]key)",
+      "b": "map_name := make([value]map[key])",
+      "c": "map_name := make([value][key]map)",
+      "d": "None of the above"
+    },
+    "answer": "d"
+  },
+  {
+    "question": "The syntax for making a copy of slice?",
+    "options": {
+      "a": "t := copy(slice_name, element)",
+      "b": "slice_name = copy(slice_name, element)",
+      "c": "None of the above",
+      "d": "Both can be possible"
+    },
+    "answer": "d"
+  },
+  {
+    "question": "What is the difference between the * and & operators in Go?",
+    "options": {
+      "a": "* is used to dereference a pointer, & is used to get the address of a variable",
+      "b": "* is used to get the address of a variable, & is used to dereference a pointer",
+      "c": "* and & are used interchangeably in Go",
+      "d": "* and & are not used in Go"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "What is the syntax for declaring a pointer variable in Go?  ",
+    "options": {
+      "a": "pointer variableName",
+      "b": "var variableName *Type",
+      "c": "&variableName Type",
+      "d": "var *variableName Type"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "How can you run a specific test function in Go?",
+    "options": {
+      "a": "go test packageName -run TestFunctionName",
+      "b": "go run packageName -test TestFunctionName",
+      "c": "go test packageName/fileName -run TestFunctionName",
+      "d": "go run packageName/fileName -test TestFunctionName"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "How can you read the contents of a directory in Go?",
+    "options": {
+      "a": "By using the os.ReadDir function",
+      "b": "By using the os.Read function",
+      "c": "By using the ioutil.ReadDir function",
+      "d": "By using the ioutil.Read function"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "In Go, when you pass a variable to a function, what happens to the original variable's value?",
+    "options": {
+      "a": "It is modified by the function",
+      "b": "It is copied to a new variable within the function",
+      "c": "It is unchanged within the function",
+      "d": "It is reassigned to a new variable within the function"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "In Go, what is the difference between a function and a method?",
+    "options": {
+      "a": "A function can only be defined within a struct, while a method can be defined outside of it.",
+      "b": "A function can take any number of arguments, while a method can only take one.",
+      "c": "A function is a type of method that can be called on a struct.",
+      "d": "A method is a type of function that can be called on a struct or a pointer to a struct."
+    },
+    "answer": "d"
+  },
+  {
+    "question": "Suppose you define a struct of marvel character with following syntax \ntype Marvel struct{  Name string   Superpower string }  What do you think will be default value of name?",
+    "options": {
+      "a": "0",
+      "b": "(empty string)",
+      "c": "The fields are uninitialized and have no default value",
+      "d": " nil"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "What is the recommended way to organize test files in a package?",
+    "options": {
+      "a": "Keep test files in a separate directory within the package",
+      "b": " Place test files alongside the production code files in the same directory",
+      "c": "Place test files in a sub-package within the main package",
+      "d": "Not include test files in the package at all"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "When using the defer keyword, what is the order in which deferred functions are executed?",
+    "options": {
+      "a": "Deferred functions are executed in the order in which they are declared",
+      "b": "Deferred functions are executed in the reverse order in which they are declared",
+      "c": "Deferred functions are executed in a random order",
+      "d": "Deferred functions are executed only when the surrounding function returns"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "In Go, when using the panic and recover keywords, what does the recover() function return when called inside a defer function?",
+    "options": {
+      "a": "nil",
+      "b": "the value passed to the corresponding call to panic()",
+      "c": "the error value of the panic",
+      "d": "true if the panic was recovered, false otherwise"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "Chintu went with his friends on a road trip. On the way, he saw how arrangement is done at tolls which saves the time of people. As he hasn't attended Metamorphosis, he doesn't know which principle is used there. As you have attended the GoLang session help him find the name of the principal used there",
+    "options": {
+      "a": "Concurrency",
+      "b": "Parallelism"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "What supports reusability in golang?",
+    "options": {
+      "a": "Structures",
+      "b": "Maps",
+      "c": "Interfaces",
+      "d": "Channels"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "Consider the following 2 statements and choose the correct options \n Statement A: Channels can communicate between Main Routine and the child's routine \n Statement B: Channels can communicate between two child routines",
+    "options": {
+      "a": "A Statement A is true statement B is true and statement A is the correct explanation of statement B",
+      "b": "B Statement A is False statement B is true",
+      "c": "C Statement A is true statement B is true and statement A is not the correct explanation of statement B",
+      "d": "D Statement A is True statement B is false"
+    },
+    "answer": "c"
+  },
+  {
+    "question": " What do go Interfaces consists of?",
+    "options": {
+      "a": "A set of method signatures",
+      "b": "It is also referred to as a type",
+      "c": "Both of these",
+      "d": "None of these"
+    },
+    "answer": "c"
+  },
+  {
+    "question": "State True or False \n Go Routines Support Parallelism",
+    "options": {
+      "a": "True",
+      "b": "False"
+    },
+    "answer": "b"
+  },
+  {
+    "question": "What are used for Communication in GOLang?",
+    "options": {
+      "a": "Iterfaces",
+      "b": "Fuctions",
+      "c": "GoRoutines",
+      "d": "Channels"
+    },
+    "answer": "d"
+  },
+  {
+    "question": "In a program there is one main routine and two child routines. The First child routine is made to wait for 30 ms, and the Second routine is made to wait for a time of 50 ms. The main routine has to wait for 40 ms, and then it prints main Terminated. At what time will main Terminated be printed?",
+    "options": {
+      "a": "70",
+      "b": "50",
+      "c": "120"
+    },
+    "answer": "a"
+  },
+  {
+    "question": "Are threads less costlier than GORoutimes",
+    "options": {
+      "a": "Yes",
+      "b": "No"
+    },
+    "answer": "b"
+  }
+]
