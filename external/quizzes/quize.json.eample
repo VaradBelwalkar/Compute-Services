@@ -3,11 +3,12 @@
     "question": "Which one is incorrect ?",
     "options": {
       "a": "Uber-server handling",
-      "b": "Netflix-heavy data processing",
+      "b": "Netflix-heavy data processing", 
       "c": "Docker - written in go",
       "d": "All of the above"
     },
     "answer": "a"
+    "marks": "2"
   },
   {
     "question": "Is Go Language is case-sensitive?",
@@ -18,6 +19,7 @@
       "d": "Both"
     },
     "answer": "a"
+    "marks": "2"
   },
   {
     "question": "What is the default value of String in Go language?",
@@ -28,6 +30,7 @@
       "d": "NULL"
     },
     "answer": "c"
+    "marks": "2"
   },
   {
     "question": "Which function is used to get current time and date?",
@@ -38,6 +41,7 @@
       "d": "Time.Date.Now()"
     },
     "answer": "b"
+    "marks": "2"
   },
   {
     "question": "Chinki gave huge quantity of chocolates to Minki. She gave order to Minki to arrange all the chocolates in serial order. Minki don't have any idea regarding the exact count of chocolate. What will we use if we want to display the serial order  which Minki formed in go lang?",
@@ -48,6 +52,7 @@
       "d": "None of these"
     },
     "answer": "c"
+    "marks": "2"
   },
   {
     "question": "For the prize distribution of Metamorphosis, Ash was called. He is confused that which footwear will match to his outfits. Could you help him to match the footwear with his outfits. What can you use if you want to help him?",
@@ -58,6 +63,7 @@
       "d": "None of these"
     },
     "answer": "a"
+    "marks": "2"
   },
   {
     "question": "John is confused in the syntax of defining map. Help him find the correct one?",
@@ -68,6 +74,7 @@
       "d": "None of the above"
     },
     "answer": "d"
+    "marks": "2"
   },
   {
     "question": "The syntax for making a copy of slice?",
@@ -245,7 +252,7 @@
     "answer": "a"
   },
   {
-    "question": "Are threads less costlier than GORoutimes",
+    "question": "Are threads less costlier than GORoutines",
     "options": {
       "a": "Yes",
       "b": "No"

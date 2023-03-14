@@ -29,3 +29,11 @@ Create Password for MongoDB:
     Then restart the mongod server 
             ->  sudo systemctl restart  mongod (for normal OS)
             -> sudo service mongod restart
+
+
+
+
+
+            *************  REGARDING DATABASE *************
+           
+            
