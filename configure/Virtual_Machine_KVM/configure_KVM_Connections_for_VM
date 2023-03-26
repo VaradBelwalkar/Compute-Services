@@ -1,0 +1,18 @@
+
+Add below xml file as default network
+
+
+
+
+<network>
+  <name>default</name>
+  <uuid>UUID_OF_VM</uuid>
+  <forward mode='route'/>
+  <bridge name='br0'/>
+  <ip address='10.10.4.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='10.10.4.50' end='10.10.4.100'/>
+      <host mac='00:11:22:33:44:55' name='myvm' ip='10.10.4.101'/>
+    </dhcp>
+  </ip>
+</network>

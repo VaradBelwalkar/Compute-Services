@@ -1,0 +1,19 @@
+Create a file if not exists :   /etc/network/interfaces
+
+    ADD THE FOLLOWING LINES:
+
+
+
+auto eth0
+iface eth0 inet static
+address 192.168.1.15            #------> Your Ip Address (To be assigned as static)
+netmask 255.255.255.0           #------> Netmask
+gateway 192.168.1.254           #-------> Gateway
+broadcast 192.168.0.255 
+dns-nameservers 192.168.1.3     #-----> Dns server
+
+
+
+
+
+After that: sudo service network-manager restart

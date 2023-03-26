@@ -1,0 +1,10 @@
+
+- hosts: all
+  become: true
+  tasks:
+
+    - name: Provision Private Cloud MongoDB
+      docker_container:
+        image: varadbelwalkar/golang_server
+        mounts:
+        <need to be updated>

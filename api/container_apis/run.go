@@ -47,10 +47,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	}	
 	volumeBinding:=username+":/mnt:rw"
 	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			//nat.Port("443/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "443"}},
-			nat.Port("22/tcp"): []nat.PortBinding{{HostIP: "0.0.0.0"}}, //Here excluding HostPort to assign a random port 
-		},
+		NetworkMode: "host",
 		Binds: []string{volumeBinding},
 	}
 	
