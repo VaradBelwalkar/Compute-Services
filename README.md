@@ -7,6 +7,10 @@ What it provides?\
 
       Following one shows some features:
       
+Setup: 
+       Setup Virtual machine with Host-bridged network
+       Run this as daemon inside virtual machine
+       Make sure to give virtual machine static ip (not required) to be consistent regarding deployment
       
       
 
