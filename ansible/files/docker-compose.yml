@@ -1,0 +1,34 @@
+version: '3.9'
+services:
+  golang_server:
+    image: varadbelwalkar/golang_server
+    container_name: golang_server
+    ports:
+      - 8080:8000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config.json:/app/config.json
+      - ./.env:/app/.env
+    depends_on:
+      - mongo
+      - redis
+
+
+  redis:
+    image: redis
+    container_name: redis
+    volumes:
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+
+  mongo:
+    image: mongo
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: private_cloud
+    volumes:
+      - mndbdatabase:/data/db
+volumes:
+  mndbdatabase:

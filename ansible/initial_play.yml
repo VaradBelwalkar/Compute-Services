@@ -1,10 +1,41 @@
-
 - hosts: all
   become: true
+
   tasks:
 
-    - name: Provision Private Cloud MongoDB
-      docker_container:
-        image: varadbelwalkar/golang_server
-        mounts:
-        <need to be updated>
+    - name: Install Docker-Compose
+      apt:
+        name: docker-compose
+        state: present
+      
+    - name: Create required directory
+      file:
+        path: ~/docker-compose
+        state: directory
+        mode: '0755'
+      
+
+    - name: Copy Docker-Compose file
+      copy: 
+        src: docker_compose.yml
+        dest: ~/docker-compose/docker_compose.yml
+
+
+    - name: Copy Config file
+      copy: 
+        src: config.json
+        dest: ~/docker-compose/config.json
+
+    - name: Copy .env file
+      copy: 
+        src: .env
+        dest: ~/docker-compose/.env
+
+    - name: Copy redis config file
+      copy: 
+        src: redis.conf
+        dest: ~/docker-compose/redis.conf
+
+    - name: Spin up Docker-Compose
+      command: docker-compose -f ~/docker-compose/docker_compose.yml up -d
+      

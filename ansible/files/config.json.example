@@ -1,0 +1,19 @@
+{
+    "emails":[
+        "some_authorized_email@gmail.com",
+        "another_authorized_email@gmail.com"
+        
+    ],
+    "database":{
+        "name":"private_cloud",
+        "collections":[
+            "user_details",
+            "system_details"
+        ]
+    },
+    "images":[
+        "some_ubuntu"
+    ],
+    "server_port":"8000"
+    
+}
