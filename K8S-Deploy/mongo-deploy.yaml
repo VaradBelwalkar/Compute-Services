@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-database
+  labels:
+    db-name: mongodb-database
+
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+     mongodb-pod: mongodb-pod-name
+
+  template:
+    metadata:
+      name: mongodb-pod
+      labels:
+        mongodb-pod: mongodb-pod-name
+    spec:
+      containers:
+      - name: mongodb-pod-container-name
+        image: mongo
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb-service-name
+  labels:
+    mongodb-service-label: mongodb-service-label-name
+  ports:
+  -  port: 0
+     targetPort: 0
+
