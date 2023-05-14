@@ -6,10 +6,9 @@ metadata:
     db-name: mongodb-database
 
 spec:
-  replicas: 4
   selector:
     matchLabels:
-     mongodb-pod: mongodb-pod-name
+      mongodb-pod: mongodb-pod-name
 
   template:
     metadata:
@@ -20,16 +19,27 @@ spec:
       containers:
       - name: mongodb-pod-container-name
         image: mongo
-
+        volumeMounts:
+          - name: dbstorage
+            mountPath: /data/db
+      volumes:
+        - name: dbstorage
+          persistentVolumeClaim:
+            claimName: golang-server-pvc
 ---
 
 apiVersion: v1
 kind: Service
 metadata:
-  name: mongodb-service-name
+  name: mongodb-service
   labels:
     mongodb-service-label: mongodb-service-label-name
+spec:
+  selector:
+    mongodb-pod: mongodb-pod-name
+  type: ClusterIP
   ports:
-  -  port: 0
-     targetPort: 0
+  -  protocol: TCP
+     port: 27017
+     targetPort: 27017
 

@@ -1,2 +1,46 @@
 apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-deployment-name
+  labels:
+    redis-label: redis-label-value
+spec:
+  selector:
+    matchLabels:
+      redis-pod-label: redis-pod-label-name
+  template:
+    metadata:
+      name: redis-pod-name
+      labels:
+        redis-pod-label: redis-pod-label-name
+    spec:
+      containers:
+      - name: redis-pod-container-name
+        image: redis
+        volumeMounts:
+          - name: config-volume
+            mountPath: /usr/local/etc/redis/redis.conf
+            subPath: redis.conf
+        command: ["/bin/sh", "-c", "redis-server /usr/local/etc/redis/redis.conf"]
+
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: ./
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  labels:
+    redis-service-label: redis-service-label-value
+spec:
+  selector:
+    redis-pod-label: redis-pod-label-name
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
 

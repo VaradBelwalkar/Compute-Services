@@ -16,7 +16,23 @@ spec:
       containers:
       - name: golang-server-pod-container-name
         image: varadbelwalkar/golang_server
-
+        volumeMounts:
+           - name: configure
+             mountPath: /app/config.json
+             subPath: config.json
+           - name: docker-socket
+             mountPath: /var/run/docker.sock
+             subPath: docker.sock
+           - name: configure
+             mountPath: /app/.env
+             subPath: .env
+      volumes:
+        - name: configure
+          hostPath:
+            path: ./
+        - name: docker-socket
+          hostPath:
+            path: /var/run/
 ---
 
 apiversion: v1
@@ -33,4 +49,5 @@ spec:
      port: 8000
      targetPort: 8000
      nodePort: 8000
+
 
