@@ -3,6 +3,7 @@ package redis
 import (
 	"time"
 	"context"
+    "fmt"
     //"os"
 	"github.com/go-redis/redis/v8"
 )
@@ -18,6 +19,14 @@ func Initiate_Redis() {
 		Password: Redis_Password,							
 		DB: 0,
 	})
+    // Initialize a context
+    ctx := context.Background()
+
+    // Flush all the contents of the current Redis database
+    if err := Redis_Client.FlushDB(ctx).Err(); err != nil {
+        fmt.Println("Error flushing the database:", err)
+        return
+    }
 
 }   
 
