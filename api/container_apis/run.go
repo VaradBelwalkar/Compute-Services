@@ -47,7 +47,15 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	}	
 	volumeBinding:=username+":/mnt:rw"
 	hostConfig := &container.HostConfig{
-		NetworkMode: "host",
+		NetworkMode: "bridge",
+		 PortBindings: nat.PortMap{
+        "22/tcp": []nat.PortBinding{
+            {
+                HostIP:   "0.0.0.0",
+                HostPort: "",
+            },
+        },
+    },
 		Binds: []string{volumeBinding},
 	}
 	
@@ -103,7 +111,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 		return "","",500
 	}
 	
-	// Handle db call to store the resp.ID into the appropriate row for the user
+	// Handle db call to store the resp.ID into the appropriate r	ow for the user
 	containerJSON,err:=cli.ContainerInspect(ctx,resp.ID)
 	if err!=nil{		
 	return "","",500

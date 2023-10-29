@@ -3,6 +3,7 @@ package auth_service
 import (
 	"net/http"
 	"encoding/json"
+	"fmt"
 	"errors"
 	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
@@ -39,6 +40,7 @@ func CreateRegTempSession(w http.ResponseWriter,username string,password string,
 		err:=saveRegTempSession(sessionID,username,password,email,OTP)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Println("THIS");
 			return
 		}
 		// Set the session ID as a cookie

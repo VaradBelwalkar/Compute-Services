@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"fmt"
 	"io/ioutil"
 	"encoding/json"
 	"github.com/gorilla/mux"
@@ -88,14 +87,12 @@ func Setup() (*mux.Router,string){
 		// read the config file
 		data, err := ioutil.ReadFile("config.json")
 		if err != nil {
-			fmt.Println("Config file not found, Please provide Configuration file!")
 			return nil,""
 		}
 	
 		// unmarshal the JSON data into a Config struct
 		var config config
 		if err := json.Unmarshal(data, &config); err != nil {
-			fmt.Println("Configuration file format invalid!")
 			return nil,""
 		}
 

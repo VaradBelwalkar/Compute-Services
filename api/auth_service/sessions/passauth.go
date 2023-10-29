@@ -3,6 +3,7 @@ package auth_service
 import (
 	"net/http"
 	"encoding/json"
+	"fmt"
 	"errors"
 	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
 )
@@ -36,6 +37,7 @@ func CreatePassAuthSession(w http.ResponseWriter,username string){
 		err:=savePassAuthSession(sessionID,username)
 		if err!=nil{
 			w.WriteHeader(http.StatusInternalServerError)
+			fmt.Println("LIMOUSINE")
 			return
 		}
 		// Set the session ID as a cookie

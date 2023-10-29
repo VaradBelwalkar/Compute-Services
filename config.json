@@ -1,0 +1,26 @@
+{
+    "emails":[
+        "belwalkarvarad@gmail.com",
+        "another_authorized_email@gmail.com"
+        
+    ],
+    "database":{
+        "name":"private_cloud",
+        "collections":[
+            "user_details",
+            "system_details"
+        ]
+    },
+    "images":[
+        "main_ubuntu",
+        "ubuntu",
+        "nodejs",
+        "cpp",
+        "python",
+        "java",
+        "go",
+        "nested-docker"
+    ],
+    "server_port":"8000"
+    
+}

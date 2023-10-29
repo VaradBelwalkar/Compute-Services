@@ -5,6 +5,7 @@ import (
 	"context"
 	"net/http"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
 	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
@@ -22,6 +23,7 @@ import (
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Println("HELLOLIMO")
 		return
 		}
 		if err==403{
