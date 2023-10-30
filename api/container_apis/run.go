@@ -39,7 +39,7 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 		AttachStdout:false,
 		AttachStderr:false,
 		OpenStdin:false,
-		Cmd: []string{"service","ssh","start", "-D", "daemon on;"},
+		//Cmd: []string{"service","ssh","start", "-D", "daemon on;"},
 		ExposedPorts: nat.PortSet{
 			//nat.Port("443/tcp"): {},
 			nat.Port("22/tcp"): {},

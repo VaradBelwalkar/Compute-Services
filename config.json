@@ -12,14 +12,14 @@
         ]
     },
     "images":[
-        "main_ubuntu",
         "ubuntu",
         "nodejs",
         "cpp",
         "python",
         "java",
-        "go",
-        "nested-docker"
+        "golang",
+        "nested-docker",
+        "machine-learning"
     ],
     "server_port":"8000"
     

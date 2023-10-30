@@ -1,7 +1,7 @@
 # Use a lightweight Alpine image
-FROM alpine:latest
+FROM ubuntu
 
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update -y && apt-get install -y ca-certificates
 # Set the working directory
 WORKDIR /app
 
