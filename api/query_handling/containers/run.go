@@ -5,10 +5,9 @@ import (
 	"context"
 	"net/http"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
-	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
-	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
+	ca "github.com/VaradBelwalkar/Compute-Services/api/container_apis"
+	auth "github.com/VaradBelwalkar/Compute-Services/api/auth_service/auth"
 )
   // HandlerFunc to be registered
   func Container_Run(w http.ResponseWriter, r *http.Request) {
@@ -19,11 +18,10 @@ import (
 	//Extracting required string from the request Structure
 	vars := mux.Vars(r)
 	//Get the requested Image from from the request-URL and pass it to the Container handler
-	privateKey,Port,err:=ca.ContainerCreate(context.TODO(),Cli,vars["image"],username)	
+	privateKey,container_ip,err:=ca.ContainerCreate(context.TODO(),Cli,vars["image"],username)	
 	if err!=200{
 		if err ==500{
 		w.WriteHeader(http.StatusInternalServerError)
-		fmt.Println("HELLOLIMO")
 		return
 		}
 		if err==403{
@@ -37,7 +35,7 @@ import (
 		return
 	}
 
-	resp:=map[string]string{"privatekey":privateKey,"port":Port}
+	resp:=map[string]string{"privatekey":privateKey,"container_ip":container_ip}
 	b, _ := json.Marshal(resp)
 	w.Write(b)
 	w.Header().Set("Content-Type", "application/json")

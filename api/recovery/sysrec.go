@@ -6,7 +6,7 @@ import (
     "runtime"
     "github.com/docker/docker/client"
 	"go.mongodb.org/mongo-driver/bson"
-    mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+    mndb "github.com/VaradBelwalkar/Compute-Services/api/database_handling/mongodb"
 
 )
 

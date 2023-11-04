@@ -4,14 +4,15 @@ import (
 	"context"
 	"io/ioutil"
 	"strings"
+	"fmt"
 	"bytes"
 	"archive/tar"
 	"go.mongodb.org/mongo-driver/bson"
 	"github.com/docker/docker/api/types"
-	"github.com/docker/go-connections/nat"
+	//"github.com/docker/go-connections/nat"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+	db "github.com/VaradBelwalkar/Compute-Services/api/database_handling/mongodb"
 )
 
 //Create a new container
@@ -40,31 +41,33 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 		AttachStderr:false,
 		OpenStdin:false,
 		//Cmd: []string{"service","ssh","start", "-D", "daemon on;"},
-		ExposedPorts: nat.PortSet{
-			//nat.Port("443/tcp"): {},
-			nat.Port("22/tcp"): {},
-		},
+		//ExposedPorts: nat.PortSet{
+		//	//nat.Port("443/tcp"): {},
+		//	nat.Port("22/tcp"): {},
+		//},
 	}	
 	volumeBinding:=username+":/mnt:rw"
 	hostConfig := &container.HostConfig{
-		NetworkMode: "bridge",
-		 PortBindings: nat.PortMap{
-        "22/tcp": []nat.PortBinding{
-            {
-                HostIP:   "0.0.0.0",
-                HostPort: "",
-            },
-        },
-    },
+		NetworkMode: "docker-dhcp",
+	//	 PortBindings: nat.PortMap{
+    //    "22/tcp": []nat.PortBinding{
+    //        {
+    //            HostIP:   "0.0.0.0",
+    //            HostPort: "",
+    //        },
+    //    },
+    //},
 		Binds: []string{volumeBinding},
 	}
 	
     resp, err := cli.ContainerCreate(ctx,containerCfg,hostConfig,nil,nil,"")
     if err != nil {
+		fmt.Println("CREATION ERROR!")
         return "","",500
     }
 
     if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		fmt.Println("start ERROR! : ::::::",err)
         return "","",500
     }
 	
@@ -108,17 +111,20 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 	readBuf := strings.NewReader(tempString)
 	err =cli.CopyToContainer(context.Background(), resp.ID, "/root/.ssh/",readBuf ,types.CopyToContainerOptions{})
 	if err!=nil{
+		fmt.Println("copy ERROR!")
 		return "","",500
 	}
 	
 	// Handle db call to store the resp.ID into the appropriate r	ow for the user
 	containerJSON,err:=cli.ContainerInspect(ctx,resp.ID)
-	if err!=nil{		
+	if err!=nil{	
+		fmt.Println("inspect ERROR!")	
 	return "","",500
 	}
 
-	port:=containerJSON.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
-	containerName:=username+"_"+port
+	container_ip:=containerJSON.NetworkSettings.Networks["docker-dhcp"].IPAddress
+	fmt.Println(container_ip)
+	containerName:=username+"_"+strings.Replace(container_ip, ".", "_", -1)
 	// Here count is updated but not container information, hence do update that
 	//opts := options.Update().SetUpsert(true)
 	//fmt.Println(opts)
@@ -128,13 +134,14 @@ func ContainerCreate(ctx context.Context,cli *client.Client,imageName string,use
 
 	update:=bson.M{ "$set":bson.M{
 		"totalOwnedContainers":totalOwnedContainers+1,
-		"containerInfo."+containerName:bson.M{"containerID":resp.ID,"port":port,"status":"running"},
+		"containerInfo."+containerName:bson.M{"containerID":resp.ID,"container_ip":strings.Replace(container_ip, ".", "_", -1),"status":"running"},
 	}}
 
 	updateResult,err:=db.CollectionHandler.UpdateOne(ctx,filter,update)
 	if err!=nil || updateResult.MatchedCount!=1{
+		fmt.Println("DB ERROR AT run handling ERROR!")
 		return "","",500
 	}
-return privateKey,port,200
+return privateKey,container_ip,200
 }
 

@@ -8,8 +8,8 @@ import (
 	"strconv"
     "math/rand"
     "go.mongodb.org/mongo-driver/bson"
-    mng "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
-    rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
+    mng "github.com/VaradBelwalkar/Compute-Services/api/database_handling/mongodb"
+    rds "github.com/VaradBelwalkar/Compute-Services/api/database_handling/redis"
 )
 
 var Official_Email string

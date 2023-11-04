@@ -3,7 +3,7 @@ package twofa
 import (
 	"net/smtp"
     "encoding/json"
-    rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
+    rds "github.com/VaradBelwalkar/Compute-Services/api/database_handling/redis"
 )
 
 func PassReset_Send(username string,eMail string)(bool,string) {

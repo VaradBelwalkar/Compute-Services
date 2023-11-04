@@ -1,8 +1,8 @@
 package auth
 import(
 	"net/http"
-	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
-	ssn "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
+	jwt "github.com/VaradBelwalkar/Compute-Services/api/auth_service/jwt"
+	ssn "github.com/VaradBelwalkar/Compute-Services/api/auth_service/sessions"
 )
 
 

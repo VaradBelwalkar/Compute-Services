@@ -2,11 +2,11 @@ package routes
 
 import(
 	"github.com/gorilla/mux"
-	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
-	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
-	containers "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling/containers"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/query_handling/accounts"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/recovery"
+	auth "github.com/VaradBelwalkar/Compute-Services/api/auth_service/auth"
+	csrf "github.com/VaradBelwalkar/Compute-Services/api/auth_service/csrf"
+	containers "github.com/VaradBelwalkar/Compute-Services/api/query_handling/containers"
+	"github.com/VaradBelwalkar/Compute-Services/api/query_handling/accounts"
+	"github.com/VaradBelwalkar/Compute-Services/api/recovery"
 )
 
 func AddRoutes(router *mux.Router) {

@@ -1,8 +1,8 @@
 package csrf
 import (
 	"net/http"
-	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
-	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
+	jwt "github.com/VaradBelwalkar/Compute-Services/api/auth_service/jwt"
+	rds "github.com/VaradBelwalkar/Compute-Services/api/database_handling/redis"
 
 )
 

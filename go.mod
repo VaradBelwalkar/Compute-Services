@@ -1,4 +1,4 @@
-module github.com/VaradBelwalkar/Private-Cloud-MongoDB
+module github.com/VaradBelwalkar/Compute-Services
 
 go 1.18
 

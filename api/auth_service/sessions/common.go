@@ -2,7 +2,7 @@ package auth_service
 
 import (
 	"math/rand"
-	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
+	rds "github.com/VaradBelwalkar/Compute-Services/api/database_handling/redis"
 )
 
 

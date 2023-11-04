@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Clone repository') {
             steps {
-                git 'github.com/VaradBelwalkar/Private-Cloud-MongoDB'
+                git 'github.com/VaradBelwalkar/Compute-Services'
             }
         }
         stage('Build') {

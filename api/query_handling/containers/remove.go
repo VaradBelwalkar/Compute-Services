@@ -5,8 +5,8 @@ import (
 	"context"
 	"net/http"
 	"github.com/gorilla/mux"
-	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
-	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
+	ca "github.com/VaradBelwalkar/Compute-Services/api/container_apis"
+	auth "github.com/VaradBelwalkar/Compute-Services/api/auth_service/auth"
 )
 
 func Container_Remove(w http.ResponseWriter, r *http.Request) {

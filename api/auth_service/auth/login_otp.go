@@ -1,10 +1,10 @@
 package auth
 import(
 	"net/http"
-	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
-	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
-	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
-	ssn "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
+	twofa "github.com/VaradBelwalkar/Compute-Services/api/auth_service/twofa"
+	csrf "github.com/VaradBelwalkar/Compute-Services/api/auth_service/csrf"
+	jwt "github.com/VaradBelwalkar/Compute-Services/api/auth_service/jwt"
+	ssn "github.com/VaradBelwalkar/Compute-Services/api/auth_service/sessions"
 )
 
 

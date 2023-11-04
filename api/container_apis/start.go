@@ -10,7 +10,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 
-	db "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
+	db "github.com/VaradBelwalkar/Compute-Services/api/database_handling/mongodb"
 )
 
 
@@ -41,13 +41,13 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 	if errCase != nil {
 		return "","",500
 	}
-	var oldPort string
+	var old_container_ip string
 	if containerINFO.State.Running == false{
     if err := cli.ContainerStart(ctx, containerID, types.ContainerStartOptions{}); err != nil {
         return "","",500
     }
 } else {
-	oldPort=containerINFO.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
+	old_container_ip=strings.Replace(containerINFO.NetworkSettings.Networks["docker-dhcp"].IPAddress, "_", ".", -1)
 }
 
 	privateKey,publicKey,err:= MakeSSHKeyPair()
@@ -93,8 +93,8 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 	if check!=nil{
 	return "","",500
 	}
-	port:=containerJSON.NetworkSettings.NetworkSettingsBase.Ports["22/tcp"][0].HostPort
-	newContainerName:=username+"_"+port
+	container_ip:=containerJSON.NetworkSettings.Networks["docker-dhcp"].IPAddress
+	newContainerName:=username+"_"+strings.Replace(container_ip, ".", "_", -1)
 	
 
 	filter:=bson.M{
@@ -104,7 +104,7 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 		"containerInfo."+containerName:"",
 	},
 	"$set":bson.M{
-		"containerInfo."+newContainerName:bson.M{"containerID":containerID,"port":port,"status":"running"},
+		"containerInfo."+newContainerName:bson.M{"containerID":containerID,"container_ip":strings.Replace(container_ip, ".", "_", -1),"status":"running"},
 	},
 	}
 	updateResult,check:=db.CollectionHandler.UpdateOne(ctx,filter,update)
@@ -112,10 +112,10 @@ func ContainerStart(ctx context.Context,cli *client.Client,containerName string,
 		return "","",500
 	}
 	
-	return privateKey,port,200
+	return privateKey,container_ip,200
 	
 	}else{
-		return privateKey,oldPort,200
+		return privateKey,old_container_ip,200
 	}
 
 }

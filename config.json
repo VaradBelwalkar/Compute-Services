@@ -12,6 +12,7 @@
         ]
     },
     "images":[
+        "check_ubuntu",
         "ubuntu",
         "nodejs",
         "cpp",

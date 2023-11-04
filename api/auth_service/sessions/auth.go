@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"time"
 	"errors"
-	rds "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/redis"
+	rds "github.com/VaradBelwalkar/Compute-Services/api/database_handling/redis"
 )
 
 

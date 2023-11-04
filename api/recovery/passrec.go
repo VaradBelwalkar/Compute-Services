@@ -3,13 +3,13 @@ package recovery
 import(
 	"net/http"
 	"context"
-	csrf "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/csrf"
-	jwt "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/jwt"
-	mndb "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/database_handling/mongodb"
-	twofa "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/twofa"
-	"github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
+	csrf "github.com/VaradBelwalkar/Compute-Services/api/auth_service/csrf"
+	jwt "github.com/VaradBelwalkar/Compute-Services/api/auth_service/jwt"
+	mndb "github.com/VaradBelwalkar/Compute-Services/api/database_handling/mongodb"
+	twofa "github.com/VaradBelwalkar/Compute-Services/api/auth_service/twofa"
+	"github.com/VaradBelwalkar/Compute-Services/api/auth_service/auth"
 	"go.mongodb.org/mongo-driver/bson"
-	session "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/sessions"
+	session "github.com/VaradBelwalkar/Compute-Services/api/auth_service/sessions"
 )
 
 func RecoverPass(w http.ResponseWriter, r *http.Request) {

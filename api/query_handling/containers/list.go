@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 	"encoding/json"
-	ca "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/container_apis"
-	auth "github.com/VaradBelwalkar/Private-Cloud-MongoDB/api/auth_service/auth"
+	ca "github.com/VaradBelwalkar/Compute-Services/api/container_apis"
+	auth "github.com/VaradBelwalkar/Compute-Services/api/auth_service/auth"
 
 )
 
