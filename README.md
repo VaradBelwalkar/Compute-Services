@@ -4,8 +4,8 @@
 
 Building a lab environment can be time-consuming.  Our platform provides,
 
-
-- 🐎 Quick on-demand containers and provisioning.
+  
+- Quick on-demand containers and provisioning.
 - Comprehensive list of various development containers.
 - Simplified service deployment with services accessible throughout network
 - Automatic DNS manipulation, thereby accessing services with choosen domain-names
@@ -26,7 +26,7 @@ Building a lab environment can be time-consuming.  Our platform provides,
 
 ### 👽 Run a honeypot
 - Study SSH attack patterns up close. Drop attackers safely into network-isolated containers
-## Initial Setup:
+## 🔨 Initial Setup:
 - Setup host bridging with separate host virtual interface, and install docker plugin as explained here: [Initial Setup](https://github.com/VaradBelwalkar/Compute-Services/blob/master/configure/setup.md)
 
 ## ❓ How to Deploy?
