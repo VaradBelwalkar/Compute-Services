@@ -1,23 +1,30 @@
-What it provides?\
-1.) Quick on-demand containers and provisioning\
-2.) Stronger Authentication mechanism\
-3.) Storage mechanism via docker volumes\
-4.) Suitable for large scale deployments (Currently single node)\
-5.) More features coming soon...
+## Compute Services
 
-      Following one shows some features:
-      
-Setup: \
-       Setup Virtual machine with Host-bridged network\
-       Run this as daemon inside virtual machine\
-       Make sure to give virtual machine static ip (not required) to be consistent regarding deployment
-       
-Limitations (Currently)
+### Build labs faster
 
-Currently all containers share same port pool from the host, if one container already using port x, other service running in another container cannot use it
+Building a lab environment can be time-consuming.  Our platform provides,
 
-Assigning containers separate ip addresses from dhcp is still in progress to make them on the same network as host, that feature coming soon...
-      
 
-https://user-images.githubusercontent.com/86964576/218269144-a1405ff5-0fad-4c00-843d-1dec5c323137.mp4
+- Quick on-demand containers and provisioning.
+- Comprehensive list of various development containers.
+- Stronger Authentication mechanism.
+- Storage mechanism via docker volumes.
+- Suitable for large scale deployments (Currently single node).
+
+### Wargames
+- Host container-based wargames easily on this platform.
+
+### Unified Networking
+- Gone those days where you need to setup the whole network configuration yourself to make nodes work together, our platform lets you focus on your work, taking care of the networking.
+- Best for learning networking/Cloud tools that normally require manual configuration and are time consuming.      
+## Setup:
+- Setup host bridging with separate host virtual interface, and install docker plugin as explained here: [Initial Setup](https://github.com/VaradBelwalkar/Compute-Services/blob/master/configure/setup.md)
+
+### Run a honeypot
+
+## How to Deploy?
+### Follow [this](https://hub.docker.com/r/varadbelwalkar/golang_server) docker image for production deployment (Recommended)
+
+
+
 
