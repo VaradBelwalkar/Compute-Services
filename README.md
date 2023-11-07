@@ -18,11 +18,12 @@ Building a lab environment can be time-consuming.  Our platform provides,
 
 ### Unified Networking
 - Gone those days where you need to setup the whole network configuration yourself to make nodes work together, our **platform** lets you focus on your work, taking care of the networking.
-- Best for learning networking/Cloud tools that normally require manual configuration and are time consuming.      
-## Setup:
-- Setup host bridging with separate host virtual interface, and install docker plugin as explained here: [Initial Setup](https://github.com/VaradBelwalkar/Compute-Services/blob/master/configure/setup.md)
+- Best for learning networking/Cloud tools that normally require manual configuration and are time consuming.
 
 ### Run a honeypot
+
+## Setup:
+- Setup host bridging with separate host virtual interface, and install docker plugin as explained here: [Initial Setup](https://github.com/VaradBelwalkar/Compute-Services/blob/master/configure/setup.md)
 
 ## How to Deploy?
 **Follow [this](https://hub.docker.com/r/varadbelwalkar/golang_server) docker image for production deployment (Recommended)**
