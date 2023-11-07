@@ -14,6 +14,9 @@ Building a lab environment can be time-consuming.  Our platform provides,
 - Storage mechanism via docker volumes.
 - Suitable for large scale deployments (Currently single node).
 
+### Want to work with AWS?
+- Get our aws container, and then simply start working with aws-cli, by just simple IP configuration.
+
 ### Wargames
 - Host container-based wargames easily on this platform.
 
