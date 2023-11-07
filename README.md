@@ -9,7 +9,7 @@ Building a lab environment can be time-consuming.  Our platform provides,
 - Comprehensive list of various development containers.
 - Simplified service deployment with services accessible throughout network
 - Automatic DNS manipulation, thereby accessing services with choosen domain-names
-- access the labs even from remote locations, no need to worry about behind-NAT communication anymore!
+- Access the labs even from remote locations, no need to worry about behind-NAT communication anymore!
 - Stronger Authentication mechanism.
 - Storage mechanism via docker volumes.
 - Suitable for large scale deployments (Currently single node).
