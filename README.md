@@ -34,7 +34,7 @@ Building a lab environment can be time-consuming.  Our platform provides,
 
 Simply create the files as mentioned on the docker hub, edit the files accordingly, and then simply run,
 ```
-$docker-compose up
+docker-compose up
 ```
 
 
