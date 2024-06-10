@@ -37,5 +37,13 @@ Simply create the files as mentioned on the docker hub, edit the files according
 docker-compose up
 ```
 
+## Following is the System Architecture:
+
+![image](https://github.com/VaradBelwalkar/Compute-Services/assets/86964576/ce5f25c5-8d83-4967-8f3c-6bdc9d8ec067)
+
+
+
+
+
 
 
